@@ -132,6 +132,6 @@ export const products: Product[] = [
 export const testimonials = [
   { id: 1, name: "Priya Ramanathan", location: "Chennai", text: "The Golu set I ordered was absolutely stunning! Each doll was beautifully hand-painted. My family loved setting it up for Navaratri.", rating: 5 },
   { id: 2, name: "Lakshmi Venkatesh", location: "Bangalore", text: "Exceptional quality brass sculptures. The Ganesha statue is a masterpiece that now graces our pooja room. Highly recommended!", rating: 5 },
-  { id: 3, name: "Meena Krishnan", location: "Coimbatore", text: "{ id: 3, name: "Meena Krishnan", location: "Coimbatore", text: "I've been ordering from Mayura Heritage Craft for 3 years now. The quality and attention to detail is unmatched. Perfect for gifting too!", rating: 5 },. The quality and attention to detail is unmatched. Perfect for gifting too!", rating: 5 },
+  { id: 3, name: "Meena Krishnan", location: "Coimbatore", text: "I've been ordering from Mayura Heritage Craft for 3 years now. The quality and attention to detail is unmatched. Perfect for gifting too!", rating: 5 },
   { id: 4, name: "Ananya Sundaram", location: "Hyderabad", text: "The Tanjore painting exceeded my expectations. The gold foil work is exquisite and it arrived beautifully packaged.", rating: 5 },
 ];
