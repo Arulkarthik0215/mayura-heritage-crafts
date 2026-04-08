@@ -8,7 +8,7 @@ const Footer = () => (
         <div className="md:col-span-1">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">🪔</span>
-            <h3 className="text-xl font-serif font-bold">KP Craft Shop</h3>
+            <h3 className="text-xl font-serif font-bold">Mayura Heritage Craft</h3>
           </div>
           <p className="text-sm opacity-80 leading-relaxed">
             Preserving the timeless art of Hindu craftsmanship. Each piece tells a story of devotion, tradition, and artistic excellence.
@@ -55,7 +55,7 @@ const Footer = () => (
       </div>
 
       <div className="mt-12 pt-8 border-t border-cream/20 text-center text-sm opacity-60">
-        <p>© {new Date().getFullYear()} KP Craft Shop. All rights reserved. Handcrafted with devotion 🙏</p>
+        <p>© {new Date().getFullYear()} Mayura Heritage Craft. All rights reserved. Handcrafted with devotion 🙏</p>
       </div>
     </div>
   </footer>

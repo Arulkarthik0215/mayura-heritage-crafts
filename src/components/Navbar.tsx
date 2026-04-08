@@ -25,7 +25,7 @@ const Navbar = () => {
             <span className="text-2xl">🪔</span>
             <div>
               <h1 className="text-xl md:text-2xl font-serif font-bold text-foreground leading-none">
-                KP Craft Shop
+                Mayura Heritage Craft
               </h1>
               <p className="text-xs text-muted-foreground hidden sm:block">Traditional Hindu Crafts</p>
             </div>

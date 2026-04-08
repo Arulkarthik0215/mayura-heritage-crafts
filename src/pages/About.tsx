@@ -29,7 +29,7 @@ const AboutPage = () => (
               <p className="text-primary font-medium text-sm tracking-widest uppercase mb-2">The Beginning</p>
               <h2 className="text-3xl font-serif font-bold text-foreground mb-4">Rooted in Tradition</h2>
               <p className="text-muted-foreground leading-relaxed">
-                KP Craft Shop was born from a deep reverence for Hindu artistic traditions. What started as a small family workshop in Chennai has grown into a beloved destination for authentic sacred crafts. Our founder began learning the art of Golu doll making at the age of 12, apprenticing under master craftsmen in Thanjavur.
+                Mayura Heritage Craft was born from a deep reverence for Hindu artistic traditions. What started as a small family workshop in Chennai has grown into a beloved destination for authentic sacred crafts. Our founder began learning the art of Golu doll making at the age of 12, apprenticing under master craftsmen in Thanjavur.
               </p>
             </div>
             <img src={categoryGolu} alt="Golu dolls" loading="lazy" className="rounded-xl" />
@@ -45,7 +45,7 @@ const AboutPage = () => (
               Each doll tells a story — from scenes of the divine court of gods and goddesses to depictions of daily village life. The tradition of making and displaying Golu is passed down through generations, connecting families to their cultural roots.
             </p>
             <p className="text-muted-foreground leading-relaxed">
-              At KP Craft Shop, we take pride in creating each Golu doll with the same techniques and reverence that our ancestors used centuries ago, while also embracing contemporary designs that appeal to modern sensibilities.
+              At Mayura Heritage Craft, we take pride in creating each Golu doll with the same techniques and reverence that our ancestors used centuries ago, while also embracing contemporary designs that appeal to modern sensibilities.
             </p>
           </div>
 
