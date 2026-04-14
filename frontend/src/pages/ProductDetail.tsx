@@ -58,12 +58,7 @@ const ProductDetail = () => {
             <h1 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">{product.name}</h1>
 
             <div className="flex items-center gap-2 mb-6">
-              <div className="flex gap-0.5">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className={`w-4 h-4 ${i < Math.floor(product.rating) ? "fill-gold text-gold" : "text-border"}`} />
-                ))}
-              </div>
-              <span className="text-sm text-muted-foreground">{product.rating} ({product.reviews} reviews)</span>
+              {/* Ratings removed */}
             </div>
 
             <div className="flex items-baseline gap-3 mb-6">

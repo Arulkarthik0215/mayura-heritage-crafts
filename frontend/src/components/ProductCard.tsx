@@ -61,10 +61,7 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
               {product.name}
             </h3>
             <div className="flex items-center gap-1 mb-3">
-              <Star className="w-3.5 h-3.5 fill-gold text-gold" />
-              <span className="text-xs text-muted-foreground">
-                {product.rating} ({product.reviews})
-              </span>
+              {/* Ratings removed */}
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">

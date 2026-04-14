@@ -22,9 +22,9 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3">
-            <img src="/logo/mayura-heritage-crafts-logo.jpeg" alt="Mayura Heritage Crafts Logo" className="w-10 h-10 md:w-12 md:h-12 object-contain mix-blend-multiply" />
+            <img src="/logo/mayura-heritage-crafts-logo.jpeg" alt="Mayura Heritage Crafts Logo" className="w-16 h-16 md:w-20 md:h-20 object-contain mix-blend-multiply" />
             <div>
-              <h1 className="text-xl md:text-2xl font-serif font-bold text-foreground leading-none">
+              <h1 className="text-2xl md:text-3xl font-serif font-bold text-foreground leading-none">
                 Mayura Heritage Crafts
               </h1>
               <p className="text-xs text-muted-foreground hidden sm:block">Where Heritage Becomes a Living Experience.</p>

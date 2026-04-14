@@ -1,13 +1,12 @@
 import { motion } from "framer-motion";
-import aboutStory from "@/assets/about-story.jpg";
 import categoryGolu from "@/assets/category-golu.jpg";
 
 const AboutPage = () => (
   <div>
     {/* Hero */}
-    <section className="relative py-20 md:py-32">
+    <section className="relative py-28 md:py-48 flex items-center justify-center min-h-[50vh]">
       <div className="absolute inset-0">
-        <img src={aboutStory} alt="Artisan at work" className="w-full h-full object-cover" />
+        <img src="/logo/logo%20with%20background.png" alt="Mayura Heritage Crafts" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-foreground/60" />
       </div>
       <div className="container-custom relative z-10 text-center">

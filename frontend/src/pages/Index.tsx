@@ -8,7 +8,7 @@ import heroImage from "@/assets/hero-golu.jpg";
 import categoryGolu from "@/assets/category-golu.jpg";
 import categoryIdols from "@/assets/category-sculptures.jpg";
 import categoryDecor from "@/assets/category-decor.jpg";
-import aboutStory from "@/assets/about-story.jpg";
+import aboutStory from "@/assets/about-story-new.png";
 
 const categoryImages: Record<string, string> = {
   golu: categoryGolu,
