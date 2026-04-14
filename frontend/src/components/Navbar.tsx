@@ -21,8 +21,8 @@ const Navbar = () => {
       <div className="container-custom">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <span className="text-2xl">🪔</span>
+          <Link to="/" className="flex items-center gap-3">
+            <img src="/logo/mayura-heritage-crafts-logo.jpeg" alt="Mayura Heritage Crafts Logo" className="w-10 h-10 md:w-12 md:h-12 object-contain mix-blend-multiply" />
             <div>
               <h1 className="text-xl md:text-2xl font-serif font-bold text-foreground leading-none">
                 Mayura Heritage Crafts

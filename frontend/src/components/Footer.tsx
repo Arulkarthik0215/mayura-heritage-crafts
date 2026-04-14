@@ -6,8 +6,8 @@ const Footer = () => (
       <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
         {/* Brand */}
         <div className="md:col-span-1">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-2xl">🪔</span>
+          <div className="flex items-center gap-3 mb-4">
+            <img src="/logo/mayura-heritage-crafts-logo.jpeg" alt="Mayura Heritage Crafts Logo" className="w-10 h-10 object-contain bg-cream rounded-full border border-cream/20" />
             <h3 className="text-xl font-serif font-bold">Mayura Heritage Crafts</h3>
           </div>
           <p className="text-sm opacity-80 leading-relaxed">
