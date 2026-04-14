@@ -36,7 +36,7 @@ const ProductsPage = () => {
       <div className="container-custom">
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
-          <h1 className="text-3xl md:text-5xl font-serif font-bold text-foreground mb-3">Our Products</h1>
+          <h1 className="text-2xl md:text-4xl font-serif font-bold text-foreground mb-3">Our Products</h1>
           <p className="text-muted-foreground max-w-2xl">
             Explore our curated collection of handcrafted Hindu art pieces, each made with devotion and generations of expertise.
           </p>
