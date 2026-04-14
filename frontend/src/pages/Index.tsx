@@ -6,20 +6,20 @@ import ProductCard from "@/components/ProductCard";
 import CategoryCard from "@/components/CategoryCard";
 import heroImage from "@/assets/hero-golu.jpg";
 import categoryGolu from "@/assets/category-golu.jpg";
-import categorySculptures from "@/assets/category-sculptures.jpg";
+import categoryIdols from "@/assets/category-sculptures.jpg";
 import categoryDecor from "@/assets/category-decor.jpg";
 import aboutStory from "@/assets/about-story.jpg";
 
 const categoryImages: Record<string, string> = {
   golu: categoryGolu,
-  sculptures: categorySculptures,
+  idols: categoryIdols,
   decor: categoryDecor,
 };
 
 const categoryData = [
   { id: "golu", name: "Golu Dolls", description: "Traditional Navaratri Golu sets" },
-  { id: "sculptures", name: "Sculptures", description: "Handcrafted divine sculptures" },
-  { id: "decor", name: "Spiritual Decor", description: "Handmade spiritual home decor" },
+  { id: "idols", name: "Idols", description: "Finely crafted divine idols" },
+  { id: "decor", name: "Spiritual Decor", description: "Elegant heritage décor pieces" },
 ];
 
 const Index = () => {
@@ -183,10 +183,10 @@ const Index = () => {
             <div className="relative z-10">
               <Sparkles className="w-10 h-10 text-gold mx-auto mb-4" />
               <h2 className="text-3xl md:text-4xl font-serif font-bold text-cream mb-4">
-                AR/VR Golu Experience
+                Digital Products
               </h2>
               <p className="text-cream/70 max-w-lg mx-auto mb-6 leading-relaxed">
-                Coming Soon — Visualize your Golu setup in augmented reality before you buy. Place dolls virtually in your home and create the perfect arrangement.
+                Coming Soon — Explore our exclusive digital showcases of Golu, blending tradition with a modern digital experience.
               </p>
               <span className="inline-flex items-center gap-2 bg-gold/20 text-gold px-6 py-2.5 rounded-full text-sm font-medium">
                 🚀 Coming Soon

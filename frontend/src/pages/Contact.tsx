@@ -26,9 +26,9 @@ const ContactPage = () => {
           {/* Contact info */}
           <div className="space-y-6">
             {[
-              { icon: MapPin, title: "Visit Us", lines: ["123 Temple Street", "Mylapore, Chennai", "Tamil Nadu 600004"] },
-              { icon: Phone, title: "Call Us", lines: ["+91 98765 43210", "Mon - Sat, 10am - 7pm"] },
-              { icon: Mail, title: "Email Us", lines: ["info@kpcraftshop.in", "orders@kpcraftshop.in"] },
+              { icon: MapPin, title: "Visit Us", lines: ["Ohm illam, Plot No: 9/1 & 9/2, Arjuna Street", "Opp. To Saibaba Temple, Thanathavam Main Road", "Rajam Nagar, Ponmeni, Madurai 625016"] },
+              { icon: Phone, title: "Call Us", lines: ["+91 98433 94792", "Sathya Bama Karthikeyan"] },
+              { icon: Mail, title: "Email Us", lines: ["sbecetce@gmail.com"] },
             ].map(({ icon: Icon, title, lines }) => (
               <motion.div key={title} initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="flex gap-4">
                 <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">

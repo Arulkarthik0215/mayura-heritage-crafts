@@ -25,9 +25,9 @@ const Navbar = () => {
             <span className="text-2xl">🪔</span>
             <div>
               <h1 className="text-xl md:text-2xl font-serif font-bold text-foreground leading-none">
-                Mayura Heritage Craft
+                Mayura Heritage Crafts
               </h1>
-              <p className="text-xs text-muted-foreground hidden sm:block">Traditional Hindu Crafts</p>
+              <p className="text-xs text-muted-foreground hidden sm:block">Where Heritage Becomes a Living Experience.</p>
             </div>
           </Link>
 

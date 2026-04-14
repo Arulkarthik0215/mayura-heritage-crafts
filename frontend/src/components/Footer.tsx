@@ -8,7 +8,7 @@ const Footer = () => (
         <div className="md:col-span-1">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">🪔</span>
-            <h3 className="text-xl font-serif font-bold">Mayura Heritage Craft</h3>
+            <h3 className="text-xl font-serif font-bold">Mayura Heritage Crafts</h3>
           </div>
           <p className="text-sm opacity-80 leading-relaxed">
             Preserving the timeless art of Hindu craftsmanship. Each piece tells a story of devotion, tradition, and artistic excellence.
@@ -22,7 +22,7 @@ const Footer = () => (
             {[
               { to: "/products", label: "All Products" },
               { to: "/products?category=golu", label: "Golu Dolls" },
-              { to: "/products?category=sculptures", label: "Sculptures" },
+              { to: "/products?category=idols", label: "Idols" },
               { to: "/products?category=decor", label: "Spiritual Decor" },
             ].map((link) => (
               <li key={link.to}>
@@ -47,15 +47,15 @@ const Footer = () => (
         <div>
           <h4 className="font-serif font-semibold mb-4">Get in Touch</h4>
           <div className="text-sm opacity-80 space-y-2">
-            <p>📧 info@kpcraftshop.in</p>
-            <p>📞 +91 98765 43210</p>
-            <p>📍 Chennai, Tamil Nadu, India</p>
+            <p>📧 sbecetce@gmail.com</p>
+            <p>📞 +91 98433 94792</p>
+            <p>📍 Madurai, Tamil Nadu, India</p>
           </div>
         </div>
       </div>
 
       <div className="mt-12 pt-8 border-t border-cream/20 text-center text-sm opacity-60">
-        <p>© {new Date().getFullYear()} Mayura Heritage Craft. All rights reserved. Handcrafted with devotion 🙏</p>
+        <p>© {new Date().getFullYear()} Mayura Heritage Crafts. All rights reserved. Handcrafted with devotion 🙏</p>
       </div>
     </div>
   </footer>

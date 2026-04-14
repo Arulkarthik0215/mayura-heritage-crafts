@@ -1,4 +1,12 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { ShoppingCart, Star } from "lucide-react";
 import { Product } from "@/data/products";
 import { useCart } from "@/context/CartContext";
@@ -11,12 +19,11 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
-  const { addToCart } = useCart();
+  const [showModal, setShowModal] = useState(false);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
-    addToCart(product);
-    toast.success(`${product.name} added to cart!`);
+    setShowModal(true);
   };
 
   const formatPrice = (price: number) =>
@@ -32,18 +39,14 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
       <Link to={`/product/${product.id}`} className="group block">
         <div className="bg-card rounded-lg overflow-hidden border border-border hover:shadow-lg transition-all duration-300">
           {/* Image */}
-          <div className="relative aspect-square overflow-hidden bg-secondary">
+          <div className="relative aspect-[4/5] overflow-hidden bg-secondary">
             <img
               src={product.images[0]}
               alt={product.name}
               loading="lazy"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
-            {product.originalPrice && (
-              <span className="absolute top-3 left-3 bg-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded">
-                {Math.round((1 - product.price / product.originalPrice) * 100)}% OFF
-              </span>
-            )}
+
             {product.tags.includes("bestseller") && (
               <span className="absolute top-3 right-3 bg-gold text-foreground text-xs font-semibold px-2 py-1 rounded">
                 Bestseller
@@ -65,10 +68,7 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="font-serif font-bold text-lg text-foreground">{formatPrice(product.price)}</span>
-                {product.originalPrice && (
-                  <span className="text-sm text-muted-foreground line-through">{formatPrice(product.originalPrice)}</span>
-                )}
+                <span className="text-xs font-semibold tracking-wider uppercase text-primary bg-primary/10 px-3 py-1 rounded-full">Launching soon</span>
               </div>
               <button
                 onClick={handleAddToCart}
@@ -81,6 +81,27 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
           </div>
         </div>
       </Link>
+
+      <Dialog open={showModal} onOpenChange={setShowModal}>
+        <DialogContent className="sm:max-w-md bg-card">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-2xl text-foreground text-center">Launching Soon!</DialogTitle>
+            <DialogDescription className="text-center pt-2 text-base text-muted-foreground">
+              We're putting the finishing touches on our store. 
+              <br/><br/>
+              <b>{product.name}</b> will be available for purchase very soon. Stay tuned!
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center mt-4">
+            <button 
+              onClick={() => setShowModal(false)}
+              className="bg-primary text-primary-foreground px-8 py-2.5 rounded-lg font-medium hover:bg-terracotta-dark transition-colors"
+            >
+              Got it
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 };

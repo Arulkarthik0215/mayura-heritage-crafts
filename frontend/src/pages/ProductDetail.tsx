@@ -1,4 +1,12 @@
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { motion } from "framer-motion";
 import { ShoppingCart, Star, ArrowLeft, Truck, Shield, RotateCcw } from "lucide-react";
 import { products } from "@/data/products";
@@ -8,7 +16,7 @@ import { toast } from "sonner";
 
 const ProductDetail = () => {
   const { id } = useParams();
-  const { addToCart } = useCart();
+  const [showModal, setShowModal] = useState(false);
   const product = products.find((p) => p.id === id);
 
   if (!product) {
@@ -26,8 +34,7 @@ const ProductDetail = () => {
     new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(price);
 
   const handleAddToCart = () => {
-    addToCart(product);
-    toast.success(`${product.name} added to cart!`);
+    setShowModal(true);
   };
 
   return (
@@ -41,7 +48,7 @@ const ProductDetail = () => {
         {/* Product */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-20">
           {/* Image */}
-          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="aspect-square rounded-xl overflow-hidden bg-secondary">
+          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="aspect-[4/5] rounded-xl overflow-hidden bg-secondary">
             <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
           </motion.div>
 
@@ -60,15 +67,7 @@ const ProductDetail = () => {
             </div>
 
             <div className="flex items-baseline gap-3 mb-6">
-              <span className="text-3xl font-serif font-bold text-foreground">{formatPrice(product.price)}</span>
-              {product.originalPrice && (
-                <>
-                  <span className="text-lg text-muted-foreground line-through">{formatPrice(product.originalPrice)}</span>
-                  <span className="text-sm font-medium text-primary">
-                    Save {formatPrice(product.originalPrice - product.price)}
-                  </span>
-                </>
-              )}
+              <span className="text-sm font-semibold tracking-widest uppercase text-primary bg-primary/10 px-4 py-1.5 rounded-full">Launching soon</span>
             </div>
 
             <p className="text-muted-foreground leading-relaxed mb-8">{product.description}</p>
@@ -97,7 +96,6 @@ const ProductDetail = () => {
           </motion.div>
         </div>
 
-        {/* Related Products */}
         {relatedProducts.length > 0 && (
           <div>
             <h2 className="text-2xl font-serif font-bold text-foreground mb-8">You May Also Like</h2>
@@ -108,7 +106,29 @@ const ProductDetail = () => {
             </div>
           </div>
         )}
+
       </div>
+
+      <Dialog open={showModal} onOpenChange={setShowModal}>
+        <DialogContent className="sm:max-w-md bg-card">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-2xl text-foreground text-center">Launching Soon!</DialogTitle>
+            <DialogDescription className="text-center pt-2 text-base text-muted-foreground">
+              We're putting the finishing touches on our store. 
+              <br/><br/>
+              <b>{product.name}</b> will be available for purchase very soon. Stay tuned!
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center mt-4">
+            <button 
+              onClick={() => setShowModal(false)}
+              className="bg-primary text-primary-foreground px-8 py-2.5 rounded-lg font-medium hover:bg-terracotta-dark transition-colors"
+            >
+              Got it
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
