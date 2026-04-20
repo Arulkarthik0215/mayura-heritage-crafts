@@ -1,9 +1,12 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Filter, SlidersHorizontal } from "lucide-react";
-import { products, categories } from "@/data/products";
+import { categories as fallbackCategories } from "@/data/products";
+import type { Product } from "@/data/products";
+import { fetchProducts, fetchCategories } from "@/lib/api";
 import ProductCard from "@/components/ProductCard";
+import ProductSkeleton from "@/components/ProductSkeleton";
 
 type SortOption = "featured" | "rating";
 
@@ -11,6 +14,36 @@ const ProductsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [sortBy, setSortBy] = useState<SortOption>("featured");
   const [showFilters, setShowFilters] = useState(false);
+
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState(fallbackCategories);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch live data from API, fall back to static data on failure
+  useEffect(() => {
+    setLoading(true);
+    Promise.all([
+      fetchProducts().catch(() => null),
+      fetchCategories().catch(() => null),
+    ]).then(([prodRes, catRes]) => {
+      if (prodRes?.products?.length) {
+        setProducts(prodRes.products);
+      } else {
+        // Fallback to static data
+        import("@/data/products").then((m) => setProducts(m.products));
+      }
+      if (catRes?.categories?.length) {
+        setCategories(
+          catRes.categories.map((c: any) => ({
+            id: c.slug,
+            name: c.name,
+            description: c.description,
+            icon: c.icon,
+          }))
+        );
+      }
+    }).finally(() => setLoading(false));
+  }, []);
 
   const activeCategory = searchParams.get("category") || "all";
 
@@ -20,7 +53,7 @@ const ProductsPage = () => {
       case "rating": return [...filtered].sort((a, b) => b.rating - a.rating);
       default: return [...filtered].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
     }
-  }, [activeCategory, sortBy]);
+  }, [activeCategory, sortBy, products]);
 
   const setCategory = (cat: string) => {
     if (cat === "all") {
@@ -82,18 +115,28 @@ const ProductsPage = () => {
         </div>
 
         {/* Results count */}
-        <p className="text-sm text-muted-foreground mb-6">
-          Showing {filteredProducts.length} product{filteredProducts.length !== 1 ? "s" : ""}
-        </p>
+        {!loading && (
+          <p className="text-sm text-muted-foreground mb-6">
+            Showing {filteredProducts.length} product{filteredProducts.length !== 1 ? "s" : ""}
+          </p>
+        )}
 
         {/* Product grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredProducts.map((product, i) => (
-            <ProductCard key={product.id} product={product} index={i} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <ProductSkeleton key={i} />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredProducts.map((product, i) => (
+              <ProductCard key={product.id} product={product} index={i} />
+            ))}
+          </div>
+        )}
 
-        {filteredProducts.length === 0 && (
+        {!loading && filteredProducts.length === 0 && (
           <div className="text-center py-20">
             <p className="text-muted-foreground text-lg">No products found in this category.</p>
           </div>

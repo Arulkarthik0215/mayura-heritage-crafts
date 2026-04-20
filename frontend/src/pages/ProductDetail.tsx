@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
   Dialog,
@@ -9,15 +9,58 @@ import {
 } from "@/components/ui/dialog";
 import { motion } from "framer-motion";
 import { ShoppingCart, Star, ArrowLeft, Truck, Shield, RotateCcw } from "lucide-react";
-import { products } from "@/data/products";
-import { useCart } from "@/context/CartContext";
+import { products as fallbackProducts } from "@/data/products";
+import type { Product } from "@/data/products";
+import { fetchProducts } from "@/lib/api";
 import ProductCard from "@/components/ProductCard";
 import { toast } from "sonner";
 
 const ProductDetail = () => {
   const { id } = useParams();
   const [showModal, setShowModal] = useState(false);
-  const product = products.find((p) => p.id === id);
+  
+  const [product, setProduct] = useState<Product | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchProducts()
+      .then((res) => {
+        if (res?.products) {
+          const found = res.products.find((p: any) => p.id === id);
+          if (found) {
+            setProduct(found);
+            setRelatedProducts(res.products.filter((p: any) => p.category === found.category && p.id !== found.id).slice(0, 4));
+          } else {
+            // Unlikely to hit this if the id exists, but fallback to static if not found
+            fallbackLoad();
+          }
+        } else {
+          fallbackLoad();
+        }
+      })
+      .catch(() => {
+        fallbackLoad();
+      })
+      .finally(() => setLoading(false));
+
+      const fallbackLoad = () => {
+        const found = fallbackProducts.find((p) => p.id === id);
+        if (found) {
+          setProduct(found);
+          setRelatedProducts(fallbackProducts.filter((p) => p.category === found.category && p.id !== found.id).slice(0, 4));
+        }
+      }
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="section-padding text-center container-custom min-h-[50vh] flex items-center justify-center">
+         <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -27,8 +70,6 @@ const ProductDetail = () => {
       </div>
     );
   }
-
-  const relatedProducts = products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4);
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(price);
@@ -49,7 +90,7 @@ const ProductDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-20">
           {/* Image */}
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="aspect-[4/5] rounded-xl overflow-hidden bg-secondary">
-            <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
+            <img src={product.images[0] || '/placeholder.svg'} alt={product.name} className="w-full h-full object-cover" />
           </motion.div>
 
           {/* Info */}
@@ -58,7 +99,7 @@ const ProductDetail = () => {
             <h1 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">{product.name}</h1>
 
             <div className="flex items-center gap-2 mb-6">
-              {/* Ratings removed */}
+              {/* Ratings removed based on earlier instructions */}
             </div>
 
             <div className="flex items-baseline gap-3 mb-6">
