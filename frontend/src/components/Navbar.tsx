@@ -3,6 +3,8 @@ import { Link, useLocation } from "react-router-dom";
 import { ShoppingCart, Menu, X } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { motion, AnimatePresence } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+import { fetchSettings } from "@/lib/api";
 
 const navLinks = [
   { path: "/", label: "Home" },
@@ -16,6 +18,11 @@ const Navbar = () => {
   const { totalItems } = useCart();
   const location = useLocation();
 
+  const { data: settings } = useQuery({
+    queryKey: ["settings"],
+    queryFn: fetchSettings,
+  });
+
   return (
     <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
       <div className="container-custom">
@@ -25,9 +32,9 @@ const Navbar = () => {
             <img src="/logo/mayura-heritage-crafts-logo.jpeg" alt="Mayura Heritage Crafts Logo" className="w-16 h-16 md:w-20 md:h-20 object-contain mix-blend-multiply" />
             <div>
               <h1 className="text-2xl md:text-3xl font-serif font-bold text-foreground leading-none">
-                Mayura Heritage Crafts
+                {settings?.siteName || "Mayura Heritage Crafts"}
               </h1>
-              <p className="text-xs text-muted-foreground hidden sm:block">Where Heritage Becomes a Living Experience.</p>
+              <p className="text-xs text-muted-foreground hidden sm:block">{settings?.tagline || "Where Heritage Becomes a Living Experience."}</p>
             </div>
           </Link>
 

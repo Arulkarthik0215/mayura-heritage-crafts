@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Star, Sparkles } from "lucide-react";
-import { fetchProducts, fetchCategories, fetchTestimonials } from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
+import { fetchProducts, fetchCategories, fetchTestimonials, fetchSettings } from "@/lib/api";
 import { products as fallbackProducts, testimonials as fallbackTestimonials } from "@/data/products";
 import type { Product } from "@/data/products";
 import ProductCard from "@/components/ProductCard";
@@ -32,6 +33,11 @@ const Index = () => {
   const [categories, setCategories] = useState(fallbackCategoryData);
   const [testimonials, setTestimonials] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const { data: settings } = useQuery({
+    queryKey: ["settings"],
+    queryFn: fetchSettings,
+  });
 
   useEffect(() => {
     setLoading(true);
@@ -84,10 +90,10 @@ const Index = () => {
           >
             <p className="text-gold font-medium text-sm tracking-widest uppercase mb-4">✦ Handcrafted with Devotion</p>
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-bold text-cream leading-tight mb-6">
-              Sacred Artistry for Your Home
+              {settings?.heroTitle || "Sacred Artistry for Your Home"}
             </h1>
             <p className="text-cream/80 text-lg md:text-xl leading-relaxed mb-8 max-w-lg">
-              Discover authentic Golu dolls, divine sculptures, and spiritual decor — each piece handcrafted by master artisans.
+              {settings?.heroSubtitle || "Discover authentic Golu dolls, divine sculptures, and spiritual decor — each piece handcrafted by master artisans."}
             </p>
             <div className="flex flex-wrap gap-4">
               <Link
@@ -164,15 +170,15 @@ const Index = () => {
               <img src={aboutStory} alt="Artisan crafting" loading="lazy" width={1200} height={800} className="rounded-xl shadow-lg" />
             </motion.div>
             <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-              <p className="text-primary font-medium text-sm tracking-widest uppercase mb-2">Our Heritage</p>
+              <p className="text-primary font-medium text-sm tracking-widest uppercase mb-2">{settings?.homeAboutTitle || "Our Heritage"}</p>
               <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-6">
-                Preserving Centuries of Sacred Art
+                {settings?.homeAboutSubtitle || "Preserving Centuries of Sacred Art"}
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-6">
-                For over three generations, our family of artisans has been keeping alive the sacred tradition of Golu doll making. Each piece is hand-sculpted, painted with natural pigments, and blessed before it leaves our workshop.
+                {settings?.homeAboutText1 || "For over three generations, our family of artisans has been keeping alive the sacred tradition of Golu doll making. Each piece is hand-sculpted, painted with natural pigments, and blessed before it leaves our workshop."}
               </p>
               <p className="text-muted-foreground leading-relaxed mb-8">
-                From the intricate details of a deity's ornaments to the vibrant colors that bring each character to life, our craftsmen pour their heart and soul into every creation.
+                {settings?.homeAboutText2 || "From the intricate details of a deity's ornaments to the vibrant colors that bring each character to life, our craftsmen pour their heart and soul into every creation."}
               </p>
               <Link
                 to="/about"

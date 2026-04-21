@@ -1,7 +1,15 @@
 import { motion } from "framer-motion";
 import categoryGolu from "@/assets/category-golu.jpg";
+import { useQuery } from "@tanstack/react-query";
+import { fetchSettings } from "@/lib/api";
 
-const AboutPage = () => (
+const AboutPage = () => {
+  const { data: settings } = useQuery({
+    queryKey: ["settings"],
+    queryFn: fetchSettings,
+  });
+
+  return (
   <div>
     {/* Hero */}
     <section className="relative py-28 md:py-48 flex items-center justify-center min-h-[50vh]">
@@ -23,34 +31,9 @@ const AboutPage = () => (
     <section className="section-padding">
       <div className="container-custom max-w-3xl">
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-          <p className="text-muted-foreground text-lg leading-relaxed mb-6">
-            You've searched for idols and décor that carry true heritage, depth, and devotion — yet most often, what you find feels mass-produced and disconnected from tradition.
-          </p>
-          <p className="text-foreground text-xl font-medium leading-relaxed mb-6">
-            That gap is why Mayura Heritage Crafts exists.
-          </p>
-          <p className="text-muted-foreground text-lg leading-relaxed mb-6">
-            I'm B. Sathya Bama — a passionate curator of sculptures, Golu traditions, and cultural storytelling. Every piece we bring to you reflects the richness of Indian heritage, crafted with care, meaning, and authenticity.
-          </p>
-
-          <div className="text-muted-foreground text-lg leading-relaxed mb-6">
-            <p className="mb-3">At Mayura Heritage Crafts, we provide:</p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>Distinctive Golu dolls inspired by mythology and tradition</li>
-              <li>Finely crafted idols and brass artifacts</li>
-              <li>Elegant spiritual décor and heritage gifts</li>
-            </ul>
+          <div className="text-lg leading-relaxed text-muted-foreground whitespace-pre-wrap mb-10">
+            {settings?.aboutPageText || "You've searched for idols and décor that carry true heritage, depth, and devotion — yet most often, what you find feels mass-produced and disconnected from tradition.\n\nThat gap is why Mayura Heritage Crafts exists.\n\nI'm B. Sathya Bama — a passionate curator of sculptures, Golu traditions, and cultural storytelling. Every piece we bring to you reflects the richness of Indian heritage, crafted with care, meaning, and authenticity.\n\nAt Mayura Heritage Crafts, we provide:\n- Distinctive Golu dolls inspired by mythology and tradition\n- Finely crafted idols and brass artifacts\n- Elegant spiritual décor and heritage gifts\n\nWe go beyond products — we bring stories, devotion, and culture into your spaces.\n\nWith a vision to take our traditions beyond boundaries, we also enable global access to heritage collections and explore digital showcases of Golu, blending tradition with modern experience.\n\nBecause heritage is not just to be preserved — it is to be experienced."}
           </div>
-
-          <p className="text-foreground text-xl font-medium leading-relaxed mb-6">
-            We go beyond products — we bring stories, devotion, and culture into your spaces.
-          </p>
-          <p className="text-muted-foreground text-lg leading-relaxed mb-6">
-            With a vision to take our traditions beyond boundaries, we also enable global access to heritage collections and explore digital showcases of Golu, blending tradition with modern experience.
-          </p>
-          <p className="text-foreground text-lg font-medium italic leading-relaxed mb-10">
-            Because heritage is not just to be preserved — it is to be experienced.
-          </p>
         </motion.div>
 
         {/* Image */}
@@ -81,6 +64,7 @@ const AboutPage = () => (
       </div>
     </section>
   </div>
-);
+  );
+};
 
 export default AboutPage;

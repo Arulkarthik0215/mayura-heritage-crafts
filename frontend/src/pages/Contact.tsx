@@ -2,9 +2,15 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { MapPin, Phone, Mail, Send } from "lucide-react";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { fetchSettings } from "@/lib/api";
 
 const ContactPage = () => {
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
+  const { data: settings } = useQuery({
+    queryKey: ["settings"],
+    queryFn: fetchSettings,
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,9 +32,9 @@ const ContactPage = () => {
           {/* Contact info */}
           <div className="space-y-6">
             {[
-              { icon: MapPin, title: "Visit Us", lines: ["Ohm illam, Plot No: 9/1 & 9/2, Arjuna Street", "Opp. To Saibaba Temple, Thanathavam Main Road", "Rajam Nagar, Ponmeni, Madurai 625016"] },
-              { icon: Phone, title: "Call Us", lines: ["+91 98433 94792", "Sathya Bama Karthikeyan"] },
-              { icon: Mail, title: "Email Us", lines: ["sbecetce@gmail.com"] },
+              { icon: MapPin, title: "Visit Us", lines: [settings?.contactAddress || "Madurai, Tamil Nadu, India"] },
+              { icon: Phone, title: "Call Us", lines: [settings?.contactPhone || "+91 98433 94792"] },
+              { icon: Mail, title: "Email Us", lines: [settings?.contactEmail || "sbecetce@gmail.com"] },
             ].map(({ icon: Icon, title, lines }) => (
               <motion.div key={title} initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="flex gap-4">
                 <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">

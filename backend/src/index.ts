@@ -10,6 +10,7 @@ import productRoutes from './routes/products';
 import categoryRoutes from './routes/categories';
 import testimonialRoutes from './routes/testimonials';
 import uploadRoutes from './routes/upload';
+import settingsRoutes from './routes/settings';
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -33,6 +34,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/testimonials', testimonialRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // Start server
 app.listen(port, () => {

@@ -162,3 +162,18 @@ export async function deleteImage(url: string) {
   });
   return handleResponse<{ message: string }>(res);
 }
+
+/* ─── Settings ─── */
+export async function fetchSettings() {
+  const res = await fetch(`${API_BASE}/settings`);
+  return handleResponse<any>(res);
+}
+
+export async function updateSettings(data: any) {
+  const res = await fetch(`${API_BASE}/settings`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(data),
+  });
+  return handleResponse<any>(res);
+}

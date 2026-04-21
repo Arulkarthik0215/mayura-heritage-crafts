@@ -21,6 +21,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminTestimonials from "./pages/admin/AdminTestimonials";
+import AdminSettings from "./pages/admin/AdminSettings";
 
 import ScrollToTop from "@/components/ScrollToTop";
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ const App = () => (
                 <Route path="products" element={<AdminProducts />} />
                 <Route path="categories" element={<AdminCategories />} />
                 <Route path="testimonials" element={<AdminTestimonials />} />
+                <Route path="settings" element={<AdminSettings />} />
               </Route>
 
               {/* ── Public storefront ── */}

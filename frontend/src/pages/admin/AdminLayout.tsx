@@ -8,6 +8,7 @@ import {
   LogOut,
   ChevronLeft,
   Menu,
+  Settings,
 } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -17,6 +18,7 @@ const sidebarLinks = [
   { to: "/admin/products", icon: Package, label: "Products", end: false },
   { to: "/admin/categories", icon: Layers, label: "Categories", end: false },
   { to: "/admin/testimonials", icon: MessageSquareQuote, label: "Testimonials", end: false },
+  { to: "/admin/settings", icon: Settings, label: "Settings", end: false },
 ];
 
 const AdminLayout = () => {
