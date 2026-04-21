@@ -22,6 +22,7 @@ import AdminProducts from "./pages/admin/AdminProducts";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminTestimonials from "./pages/admin/AdminTestimonials";
 
+import ScrollToTop from "@/components/ScrollToTop";
 const queryClient = new QueryClient();
 
 /** Wraps public pages with the store Navbar + Footer */
@@ -40,6 +41,7 @@ const App = () => (
         <CartProvider>
           <Sonner />
           <BrowserRouter>
+            <ScrollToTop />
             <Routes>
               {/* ── Admin panel (no store Navbar/Footer) ── */}
               <Route path="/admin/login" element={<AdminLogin />} />

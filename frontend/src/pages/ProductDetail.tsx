@@ -124,7 +124,14 @@ const ProductDetail = () => {
               )}
             </div>
 
-            <p className="text-muted-foreground leading-relaxed mb-8">{product.description}</p>
+            {/* About This Product */}
+            <div className="bg-secondary/50 border border-border rounded-2xl p-5 mb-8">
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                <span className="w-1 h-4 bg-primary rounded-full" />
+                About This Product
+              </h3>
+              <p className="text-muted-foreground leading-relaxed text-[15px]">{product.description}</p>
+            </div>
 
             <button
               onClick={handleAddToCart}

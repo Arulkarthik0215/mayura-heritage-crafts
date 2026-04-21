@@ -32,7 +32,7 @@ async function main() {
   // --- Seed Categories ---
   const categories = [
     { slug: 'golu', name: 'Golu Dolls', description: 'Traditional Navaratri Golu sets', icon: '🪔' },
-    { slug: 'sculptures', name: 'Sculptures', description: 'Handcrafted divine sculptures', icon: '🕉️' },
+    { slug: 'idols', name: 'Idols', description: 'Finely crafted divine idols', icon: '🕉️' },
     { slug: 'decor', name: 'Spiritual Decor', description: 'Handmade spiritual home decor', icon: '🏵️' },
   ];
 
@@ -79,7 +79,7 @@ async function main() {
         description: 'Exquisitely crafted brass Lord Ganesha sculpture. Each piece is individually cast using the traditional lost-wax method. A timeless addition to your pooja room.',
         price: 7999,
         originalPrice: 9499,
-        category: 'sculptures',
+        category: 'idols',
         images: ['/placeholder.svg'],
         featured: true,
         rating: 4.9,
@@ -91,7 +91,7 @@ async function main() {
         name: 'Terracotta Lakshmi Devi',
         description: 'Hand-sculpted terracotta Goddess Lakshmi statue with gold leaf accents. Made by artisans from Thanjavur with generations of craft expertise.',
         price: 2999,
-        category: 'sculptures',
+        category: 'idols',
         images: ['/placeholder.svg'],
         featured: false,
         rating: 4.7,

@@ -144,13 +144,13 @@ const AdminCategories = () => {
       {/* Delete confirmation */}
       <AnimatePresence>
         {deleteConfirm && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setDeleteConfirm(null)} className="fixed inset-0 bg-black/60 z-50" />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setDeleteConfirm(null)} className="absolute inset-0 bg-black/60" />
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-[hsl(20,15%,16%)] border border-white/10 rounded-2xl p-6 z-50"
+              className="relative w-full max-w-sm bg-[hsl(20,15%,16%)] border border-white/10 rounded-2xl p-6 shadow-2xl z-10"
             >
               <div className="text-center">
                 <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-red-400/10 flex items-center justify-center">
@@ -164,20 +164,20 @@ const AdminCategories = () => {
                 </div>
               </div>
             </motion.div>
-          </>
+          </div>
         )}
       </AnimatePresence>
 
       {/* Create/Edit Modal */}
       <AnimatePresence>
         {showModal && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowModal(false)} className="fixed inset-0 bg-black/60 z-50" />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowModal(false)} className="absolute inset-0 bg-black/60" />
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 30 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md max-h-[90vh] overflow-y-auto bg-[hsl(20,15%,14%)] border border-white/10 rounded-2xl z-50"
+              className="relative w-full max-w-md max-h-[90vh] overflow-y-auto bg-[hsl(20,15%,14%)] border border-white/10 rounded-2xl shadow-2xl z-10"
             >
               <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
                 <h2 className="text-lg font-serif font-bold text-cream">{editing ? "Edit Category" : "Add Category"}</h2>
@@ -209,7 +209,7 @@ const AdminCategories = () => {
                 </div>
               </form>
             </motion.div>
-          </>
+          </div>
         )}
       </AnimatePresence>
     </div>
