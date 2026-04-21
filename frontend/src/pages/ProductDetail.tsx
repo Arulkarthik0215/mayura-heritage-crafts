@@ -13,12 +13,10 @@ import { products as fallbackProducts } from "@/data/products";
 import type { Product } from "@/data/products";
 import { fetchProducts } from "@/lib/api";
 import ProductCard from "@/components/ProductCard";
-import { toast } from "sonner";
 
 const ProductDetail = () => {
   const { id } = useParams();
   const [showModal, setShowModal] = useState(false);
-  
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -98,12 +96,32 @@ const ProductDetail = () => {
             <p className="text-primary text-sm font-medium uppercase tracking-widest mb-2">{product.category}</p>
             <h1 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">{product.name}</h1>
 
-            <div className="flex items-center gap-2 mb-6">
-              {/* Ratings removed based on earlier instructions */}
+            <div className="flex items-center gap-4 mb-6">
+              <div className="flex items-center gap-1">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`w-4 h-4 ${
+                      i < Math.floor(Number(product.rating || 0))
+                        ? "fill-gold text-gold"
+                        : "fill-muted text-muted"
+                    }`}
+                  />
+                ))}
+                <span className="text-sm text-muted-foreground ml-1">
+                  ({product.reviews || 0} reviews)
+                </span>
+              </div>
+              <span className={`text-sm font-medium px-3 py-1 rounded-full ${product.inStock ? 'bg-emerald-500/10 text-emerald-600' : 'bg-red-500/10 text-red-600'}`}>
+                {product.inStock ? "In Stock" : "Out of Stock"}
+              </span>
             </div>
 
             <div className="flex items-baseline gap-3 mb-6">
-              <span className="text-sm font-semibold tracking-widest uppercase text-primary bg-primary/10 px-4 py-1.5 rounded-full">Launching soon</span>
+              <span className="text-3xl font-serif font-bold text-foreground">{formatPrice(product.price)}</span>
+              {product.originalPrice && (
+                <span className="text-lg text-muted-foreground line-through">{formatPrice(product.originalPrice)}</span>
+              )}
             </div>
 
             <p className="text-muted-foreground leading-relaxed mb-8">{product.description}</p>
@@ -148,15 +166,15 @@ const ProductDetail = () => {
       <Dialog open={showModal} onOpenChange={setShowModal}>
         <DialogContent className="sm:max-w-md bg-card">
           <DialogHeader>
-            <DialogTitle className="font-serif text-2xl text-foreground text-center">Launching Soon!</DialogTitle>
+            <DialogTitle className="font-serif text-2xl text-foreground text-center">Coming Soon!</DialogTitle>
             <DialogDescription className="text-center pt-2 text-base text-muted-foreground">
-              We're putting the finishing touches on our store. 
+              We're putting the finishing touches on our store.
               <br/><br/>
-              <b>{product.name}</b> will be available for purchase very soon. Stay tuned!
+              <b>{product.name}</b> will be available for ordering very soon. Stay tuned!
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-center mt-4">
-            <button 
+            <button
               onClick={() => setShowModal(false)}
               className="bg-primary text-primary-foreground px-8 py-2.5 rounded-lg font-medium hover:bg-terracotta-dark transition-colors"
             >

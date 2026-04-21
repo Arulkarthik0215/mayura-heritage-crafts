@@ -8,7 +8,7 @@ import { fetchProducts, fetchCategories } from "@/lib/api";
 import ProductCard from "@/components/ProductCard";
 import ProductSkeleton from "@/components/ProductSkeleton";
 
-type SortOption = "featured" | "rating";
+type SortOption = "featured" | "rating" | "price-asc" | "price-desc";
 
 const ProductsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -50,6 +50,8 @@ const ProductsPage = () => {
   const filteredProducts = useMemo(() => {
     let filtered = activeCategory === "all" ? products : products.filter((p) => p.category === activeCategory);
     switch (sortBy) {
+      case "price-asc": return [...filtered].sort((a, b) => a.price - b.price);
+      case "price-desc": return [...filtered].sort((a, b) => b.price - a.price);
       case "rating": return [...filtered].sort((a, b) => b.rating - a.rating);
       default: return [...filtered].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
     }
@@ -109,6 +111,8 @@ const ProductsPage = () => {
               className="text-sm bg-secondary text-secondary-foreground border-0 rounded-lg px-3 py-2 focus:ring-2 focus:ring-ring"
             >
               <option value="featured">Featured</option>
+              <option value="price-asc">Price: Low to High</option>
+              <option value="price-desc">Price: High to Low</option>
               <option value="rating">Top Rated</option>
             </select>
           </div>
