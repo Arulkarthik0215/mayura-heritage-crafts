@@ -4,6 +4,7 @@ import { MapPin, Phone, Mail, Send } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSettings } from "@/lib/api";
+import SEO from "@/components/SEO";
 
 const ContactPage = () => {
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
@@ -20,6 +21,11 @@ const ContactPage = () => {
 
   return (
     <div className="section-padding">
+      <SEO 
+        title="Contact Us | Mayura Heritage Crafts"
+        description="Get in touch with Mayura Heritage Crafts. Have a question about our products or a custom order? We'd love to hear from you."
+        url="https://mayuraheritagecrafts.com/contact"
+      />
       <div className="container-custom max-w-5xl">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
           <h1 className="text-3xl md:text-5xl font-serif font-bold text-foreground mb-3">Get in Touch</h1>

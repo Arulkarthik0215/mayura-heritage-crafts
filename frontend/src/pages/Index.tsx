@@ -14,6 +14,7 @@ import categoryGolu from "@/assets/category-golu.jpg";
 import categoryIdols from "@/assets/category-sculptures.jpg";
 import categoryDecor from "@/assets/category-decor.jpg";
 import aboutStory from "@/assets/about-story-new.png";
+import SEO from "@/components/SEO";
 
 const categoryImages: Record<string, string> = {
   golu: categoryGolu,
@@ -73,8 +74,25 @@ const Index = () => {
     }).finally(() => setLoading(false));
   }, []);
 
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Mayura Heritage Crafts",
+    "url": "https://mayuraheritagecrafts.com",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://mayuraheritagecrafts.com/products?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  };
+
   return (
     <div>
+      <SEO 
+        title={settings?.heroTitle ? `${settings.heroTitle} | Mayura Heritage Crafts` : "Mayura Heritage Crafts | Authentic Golu Dolls & Spiritual Decor"}
+        description={settings?.heroSubtitle || "Discover authentic handcrafted Golu dolls, divine sculptures, and spiritual decor from master artisans."}
+        schema={schema}
+      />
       {/* Hero */}
       <section className="relative min-h-[70vh] md:min-h-[85vh] flex items-center">
         <div className="absolute inset-0">

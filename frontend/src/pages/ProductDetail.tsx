@@ -19,6 +19,7 @@ import { products as fallbackProducts } from "@/data/products";
 import type { Product } from "@/data/products";
 import { fetchProducts } from "@/lib/api";
 import ProductCard from "@/components/ProductCard";
+import SEO from "@/components/SEO";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -113,8 +114,31 @@ const ProductDetail = () => {
   const images = product.images?.length ? product.images : ["/placeholder.svg"];
   const hasMultipleImages = images.length > 1;
 
+  const productSchema = {
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    "name": product.name,
+    "image": product.images[0] || "https://mayuraheritagecrafts.com/logo/mayura-heritage-crafts-logo.jpeg",
+    "description": product.description,
+    "sku": product.id,
+    "offers": {
+      "@type": "Offer",
+      "url": `https://mayuraheritagecrafts.com/product/${product.id}`,
+      "priceCurrency": "INR",
+      "price": product.price,
+      "availability": product.inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      "itemCondition": "https://schema.org/NewCondition"
+    }
+  };
+
   return (
     <div className="section-padding">
+      <SEO 
+        title={`${product.name} | Mayura Heritage Crafts`}
+        description={product.description.substring(0, 160)}
+        image={product.images[0]}
+        schema={productSchema}
+      />
       <div className="container-custom">
         {/* Breadcrumb */}
         <Link to="/products" className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary mb-8 text-sm">

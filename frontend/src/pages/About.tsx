@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import categoryGolu from "@/assets/category-golu.jpg";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSettings } from "@/lib/api";
+import SEO from "@/components/SEO";
 
 const AboutPage = () => {
   const { data: settings } = useQuery({
@@ -11,6 +12,11 @@ const AboutPage = () => {
 
   return (
   <div>
+    <SEO 
+      title="About Us | Mayura Heritage Crafts"
+      description="Where Heritage Becomes a Living Experience. Discover the story of Mayura Heritage Crafts and our passion for traditional Indian art."
+      url="https://mayuraheritagecrafts.com/about"
+    />
     {/* Hero */}
     <section className="relative py-28 md:py-48 flex items-center justify-center min-h-[50vh]">
       <div className="absolute inset-0">

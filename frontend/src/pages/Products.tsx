@@ -7,6 +7,7 @@ import type { Product } from "@/data/products";
 import { fetchProducts, fetchCategories } from "@/lib/api";
 import ProductCard from "@/components/ProductCard";
 import ProductSkeleton from "@/components/ProductSkeleton";
+import SEO from "@/components/SEO";
 
 type SortOption = "featured" | "rating" | "price-asc" | "price-desc";
 
@@ -68,6 +69,11 @@ const ProductsPage = () => {
 
   return (
     <div className="section-padding">
+      <SEO 
+        title="Our Products | Mayura Heritage Crafts"
+        description="Explore our curated collection of handcrafted Hindu art pieces, Golu dolls, divine sculptures, and spiritual decor."
+        url="https://mayuraheritagecrafts.com/products"
+      />
       <div className="container-custom">
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
