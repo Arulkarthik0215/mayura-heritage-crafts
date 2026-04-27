@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
   Dialog,
@@ -7,8 +7,14 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  type CarouselApi,
+} from "@/components/ui/carousel";
 import { motion } from "framer-motion";
-import { ShoppingCart, Star, ArrowLeft, Truck, Shield, RotateCcw } from "lucide-react";
+import { ShoppingCart, Star, ArrowLeft, ArrowRight, Truck, Shield, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
 import { products as fallbackProducts } from "@/data/products";
 import type { Product } from "@/data/products";
 import { fetchProducts } from "@/lib/api";
@@ -20,6 +26,9 @@ const ProductDetail = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [slideCount, setSlideCount] = useState(0);
 
   useEffect(() => {
     setLoading(true);
@@ -52,6 +61,31 @@ const ProductDetail = () => {
       }
   }, [id]);
 
+  // Carousel slide tracking
+  const onSelect = useCallback(() => {
+    if (!carouselApi) return;
+    setCurrentSlide(carouselApi.selectedScrollSnap());
+    setSlideCount(carouselApi.scrollSnapList().length);
+  }, [carouselApi]);
+
+  useEffect(() => {
+    if (!carouselApi) return;
+    onSelect();
+    carouselApi.on("select", onSelect);
+    carouselApi.on("reInit", onSelect);
+    return () => {
+      carouselApi.off("select", onSelect);
+      carouselApi.off("reInit", onSelect);
+    };
+  }, [carouselApi, onSelect]);
+
+  const scrollToSlide = useCallback(
+    (index: number) => {
+      carouselApi?.scrollTo(index);
+    },
+    [carouselApi]
+  );
+
   if (loading) {
     return (
       <div className="section-padding text-center container-custom min-h-[50vh] flex items-center justify-center">
@@ -76,6 +110,9 @@ const ProductDetail = () => {
     setShowModal(true);
   };
 
+  const images = product.images?.length ? product.images : ["/placeholder.svg"];
+  const hasMultipleImages = images.length > 1;
+
   return (
     <div className="section-padding">
       <div className="container-custom">
@@ -86,9 +123,102 @@ const ProductDetail = () => {
 
         {/* Product */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-20">
-          {/* Image */}
-          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="aspect-[4/5] rounded-xl overflow-hidden bg-secondary">
-            <img src={product.images[0] || '/placeholder.svg'} alt={product.name} className="w-full h-full object-cover" />
+          {/* Image Carousel */}
+          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
+            {/* Main Carousel */}
+            <div className="relative group">
+              <Carousel
+                opts={{
+                  loop: true,
+                  align: "center",
+                }}
+                setApi={setCarouselApi}
+                className="w-full"
+              >
+                <CarouselContent>
+                  {images.map((img, index) => (
+                    <CarouselItem key={index}>
+                      <div className="aspect-[4/5] rounded-xl overflow-hidden bg-secondary">
+                        <img
+                          src={img}
+                          alt={`${product.name} - Image ${index + 1}`}
+                          className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                        />
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+
+                {/* Custom arrow buttons - only show when multiple images */}
+                {hasMultipleImages && (
+                  <>
+                    <button
+                      onClick={() => carouselApi?.scrollPrev()}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/80 dark:bg-black/50 backdrop-blur-sm shadow-lg flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-white dark:hover:bg-black/70 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+                      aria-label="Previous image"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => carouselApi?.scrollNext()}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white/80 dark:bg-black/50 backdrop-blur-sm shadow-lg flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-white dark:hover:bg-black/70 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+                      aria-label="Next image"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </>
+                )}
+              </Carousel>
+
+              {/* Slide counter badge */}
+              {hasMultipleImages && (
+                <div className="absolute bottom-4 right-4 z-10 bg-black/60 backdrop-blur-sm text-white text-xs font-medium px-3 py-1.5 rounded-full">
+                  {currentSlide + 1} / {slideCount}
+                </div>
+              )}
+            </div>
+
+            {/* Dot indicators */}
+            {hasMultipleImages && (
+              <div className="flex items-center justify-center gap-2">
+                {images.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => scrollToSlide(index)}
+                    className={`transition-all duration-300 rounded-full ${
+                      index === currentSlide
+                        ? "w-8 h-2.5 bg-primary"
+                        : "w-2.5 h-2.5 bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                    }`}
+                    aria-label={`Go to image ${index + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Thumbnail strip */}
+            {hasMultipleImages && (
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                {images.map((img, index) => (
+                  <button
+                    key={index}
+                    onClick={() => scrollToSlide(index)}
+                    className={`relative shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden transition-all duration-200 ${
+                      index === currentSlide
+                        ? "ring-2 ring-primary ring-offset-2 ring-offset-background opacity-100"
+                        : "opacity-50 hover:opacity-80"
+                    }`}
+                    aria-label={`View image ${index + 1}`}
+                  >
+                    <img
+                      src={img}
+                      alt={`${product.name} thumbnail ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </motion.div>
 
           {/* Info */}
