@@ -89,7 +89,7 @@ const Index = () => {
   return (
     <div>
       <SEO 
-        title={settings?.heroTitle ? `${settings.heroTitle} | Mayura Heritage Crafts` : "Mayura Heritage Crafts | Authentic Golu Dolls & Spiritual Decor"}
+        title="Mayura Heritage Crafts | Authentic Golu Dolls & Spiritual Decor"
         description={settings?.heroSubtitle || "Discover authentic handcrafted Golu dolls, divine sculptures, and spiritual decor from master artisans."}
         schema={schema}
       />
