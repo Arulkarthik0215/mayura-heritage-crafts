@@ -8,5 +8,8 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspaces --if-present"
+  },
+  "dependencies": {
+    "react-helmet-async": "^3.0.0"
   }
 }
