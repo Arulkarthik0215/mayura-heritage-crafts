@@ -13,6 +13,8 @@ import ProductDetail from "./pages/ProductDetail";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Cart from "./pages/Cart";
+import Checkout from "./pages/Checkout";
+import OrderSuccess from "./pages/OrderSuccess";
 import NotFound from "./pages/NotFound";
 
 // Admin pages
@@ -23,6 +25,7 @@ import AdminProducts from "./pages/admin/AdminProducts";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminTestimonials from "./pages/admin/AdminTestimonials";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminOrders from "./pages/admin/AdminOrders";
 
 import ScrollToTop from "@/components/ScrollToTop";
 const queryClient = new QueryClient();
@@ -51,6 +54,7 @@ const App = () => (
                 <Route path="/admin" element={<AdminLayout />}>
                   <Route index element={<AdminDashboard />} />
                   <Route path="products" element={<AdminProducts />} />
+                  <Route path="orders" element={<AdminOrders />} />
                   <Route path="categories" element={<AdminCategories />} />
                   <Route path="testimonials" element={<AdminTestimonials />} />
                   <Route path="settings" element={<AdminSettings />} />
@@ -63,6 +67,8 @@ const App = () => (
                 <Route path="/about" element={<StoreLayout><About /></StoreLayout>} />
                 <Route path="/contact" element={<StoreLayout><Contact /></StoreLayout>} />
                 <Route path="/cart" element={<StoreLayout><Cart /></StoreLayout>} />
+                <Route path="/checkout" element={<StoreLayout><Checkout /></StoreLayout>} />
+                <Route path="/order-success" element={<StoreLayout><OrderSuccess /></StoreLayout>} />
                 <Route path="*" element={<StoreLayout><NotFound /></StoreLayout>} />
               </Routes>
             </BrowserRouter>

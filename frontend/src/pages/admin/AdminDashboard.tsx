@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Package, Layers, MessageSquareQuote, TrendingUp, ArrowRight } from "lucide-react";
-import { fetchProducts, fetchCategories, fetchTestimonials } from "@/lib/api";
+import { Package, Layers, MessageSquareQuote, TrendingUp, ArrowRight, ShoppingBag, IndianRupee } from "lucide-react";
+import { fetchProducts, fetchCategories, fetchTestimonials, fetchOrderStats } from "@/lib/api";
 
 interface Stats {
   totalProducts: number;
   totalCategories: number;
   totalTestimonials: number;
   featuredProducts: number;
+  totalOrders: number;
+  totalRevenue: number;
 }
 
 const StatCard = ({
@@ -53,19 +55,23 @@ const AdminDashboard = () => {
     totalCategories: 0,
     totalTestimonials: 0,
     featuredProducts: 0,
+    totalOrders: 0,
+    totalRevenue: 0,
   });
   const [recentProducts, setRecentProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([fetchProducts(), fetchCategories(), fetchTestimonials()])
-      .then(([prodRes, catRes, testRes]) => {
+    Promise.all([fetchProducts(), fetchCategories(), fetchTestimonials(), fetchOrderStats().catch(() => ({ totalOrders: 0, paidOrders: 0, totalRevenue: 0 }))])
+      .then(([prodRes, catRes, testRes, orderStats]) => {
         const products = prodRes.products || [];
         setStats({
           totalProducts: products.length,
           totalCategories: (catRes.categories || []).length,
           totalTestimonials: (testRes.testimonials || []).length,
           featuredProducts: products.filter((p: any) => p.featured).length,
+          totalOrders: orderStats.totalOrders || 0,
+          totalRevenue: orderStats.totalRevenue || 0,
         });
         setRecentProducts(products.slice(0, 5));
       })
@@ -90,11 +96,13 @@ const AdminDashboard = () => {
       </motion.div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-        <StatCard index={0} icon={Package} label="Total Products" value={stats.totalProducts} color="bg-primary/15 text-primary" to="/admin/products" />
-        <StatCard index={1} icon={TrendingUp} label="Featured" value={stats.featuredProducts} color="bg-gold/15 text-gold" to="/admin/products" />
-        <StatCard index={2} icon={Layers} label="Categories" value={stats.totalCategories} color="bg-emerald-500/15 text-emerald-400" to="/admin/categories" />
-        <StatCard index={3} icon={MessageSquareQuote} label="Testimonials" value={stats.totalTestimonials} color="bg-violet-500/15 text-violet-400" to="/admin/testimonials" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
+        <StatCard index={0} icon={ShoppingBag} label="Total Orders" value={stats.totalOrders} color="bg-amber-500/15 text-amber-400" to="/admin/orders" />
+        <StatCard index={1} icon={IndianRupee} label="Revenue" value={Math.round(stats.totalRevenue / 100)} color="bg-emerald-500/15 text-emerald-400" to="/admin/orders" />
+        <StatCard index={2} icon={Package} label="Total Products" value={stats.totalProducts} color="bg-primary/15 text-primary" to="/admin/products" />
+        <StatCard index={3} icon={TrendingUp} label="Featured" value={stats.featuredProducts} color="bg-gold/15 text-gold" to="/admin/products" />
+        <StatCard index={4} icon={Layers} label="Categories" value={stats.totalCategories} color="bg-blue-500/15 text-blue-400" to="/admin/categories" />
+        <StatCard index={5} icon={MessageSquareQuote} label="Testimonials" value={stats.totalTestimonials} color="bg-violet-500/15 text-violet-400" to="/admin/testimonials" />
       </div>
 
       {/* Recent Products */}

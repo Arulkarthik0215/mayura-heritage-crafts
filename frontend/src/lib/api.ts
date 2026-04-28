@@ -177,3 +177,63 @@ export async function updateSettings(data: any) {
   });
   return handleResponse<any>(res);
 }
+
+/* ─── Orders ─── */
+export async function createOrder(data: {
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  addressLine1: string;
+  addressLine2?: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  items: { productId: string; quantity: number }[];
+}) {
+  const res = await fetch(`${API_BASE}/orders`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return handleResponse<{
+    order: { id: string; orderNumber: string; totalAmount: number; razorpayOrderId: string };
+    razorpayKeyId: string;
+  }>(res);
+}
+
+export async function verifyPayment(data: {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}) {
+  const res = await fetch(`${API_BASE}/orders/verify`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return handleResponse<{ success: boolean; order: { id: string; orderNumber: string; status: string } }>(res);
+}
+
+export async function fetchAdminOrders() {
+  const res = await fetch(`${API_BASE}/orders/admin`, {
+    headers: { ...authHeaders() },
+  });
+  return handleResponse<{ orders: any[] }>(res);
+}
+
+export async function fetchOrderStats() {
+  const res = await fetch(`${API_BASE}/orders/admin/stats`, {
+    headers: { ...authHeaders() },
+  });
+  return handleResponse<{ totalOrders: number; paidOrders: number; totalRevenue: number }>(res);
+}
+
+export async function updateOrderStatus(id: string, data: { status?: string; trackingNumber?: string; notes?: string }) {
+  const res = await fetch(`${API_BASE}/orders/admin/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(data),
+  });
+  return handleResponse<{ order: any }>(res);
+}

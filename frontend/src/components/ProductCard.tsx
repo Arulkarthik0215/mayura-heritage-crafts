@@ -1,15 +1,9 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { ShoppingCart, Star } from "lucide-react";
+import { ShoppingCart, Star, Check } from "lucide-react";
 import { Product } from "@/data/products";
 import { motion } from "framer-motion";
+import { useCart } from "@/context/CartContext";
+import { toast } from "sonner";
 
 interface ProductCardProps {
   product: Product;
@@ -17,11 +11,17 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
-  const [showModal, setShowModal] = useState(false);
+  const { addToCart } = useCart();
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
-    setShowModal(true);
+    addToCart(product);
+    toast.success(
+      <div className="flex items-center gap-2">
+        <Check className="w-4 h-4 text-emerald-500" />
+        <span><b>{product.name}</b> added to cart</span>
+      </div>
+    );
   };
 
   const formatPrice = (price: number) =>
@@ -87,27 +87,6 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
           </div>
         </div>
       </Link>
-
-      <Dialog open={showModal} onOpenChange={setShowModal}>
-        <DialogContent className="sm:max-w-md bg-card">
-          <DialogHeader>
-            <DialogTitle className="font-serif text-2xl text-foreground text-center">Coming Soon!</DialogTitle>
-            <DialogDescription className="text-center pt-2 text-base text-muted-foreground">
-              We're putting the finishing touches on our store.
-              <br/><br/>
-              <b>{product.name}</b> will be available for ordering very soon. Stay tuned!
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-center mt-4">
-            <button
-              onClick={() => setShowModal(false)}
-              className="bg-primary text-primary-foreground px-8 py-2.5 rounded-lg font-medium hover:bg-terracotta-dark transition-colors"
-            >
-              Got it
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </motion.div>
   );
 };

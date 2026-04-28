@@ -9,12 +9,14 @@ import {
   ChevronLeft,
   Menu,
   Settings,
+  ShoppingBag,
 } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const sidebarLinks = [
   { to: "/admin", icon: LayoutDashboard, label: "Dashboard", end: true },
+  { to: "/admin/orders", icon: ShoppingBag, label: "Orders", end: false },
   { to: "/admin/products", icon: Package, label: "Products", end: false },
   { to: "/admin/categories", icon: Layers, label: "Categories", end: false },
   { to: "/admin/testimonials", icon: MessageSquareQuote, label: "Testimonials", end: false },

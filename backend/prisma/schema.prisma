@@ -72,3 +72,48 @@ model SiteSettings {
 
   updatedAt         DateTime @updatedAt
 }
+
+model Order {
+  id                String      @id @default(uuid())
+  orderNumber       String      @unique
+  status            String      @default("PENDING")
+
+  customerName      String
+  customerEmail     String
+  customerPhone     String
+
+  addressLine1      String
+  addressLine2      String?
+  city              String
+  state             String
+  postalCode        String
+  country           String      @default("India")
+
+  subtotal          Int
+  shippingCharge    Int         @default(0)
+  totalAmount       Int
+
+  razorpayOrderId   String?     @unique
+  razorpayPaymentId String?
+  razorpaySignature String?
+  paidAt            DateTime?
+
+  trackingNumber    String?
+  notes             String?
+
+  items             OrderItem[]
+
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+}
+
+model OrderItem {
+  id           String  @id @default(uuid())
+  orderId      String
+  order        Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId    String
+  productName  String
+  productImage String?
+  price        Int
+  quantity     Int
+}

@@ -1,10 +1,11 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Trash2, Plus, Minus, ShoppingCart, ArrowLeft } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 
 const CartPage = () => {
   const { items, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart();
+  const navigate = useNavigate();
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(price);
@@ -78,7 +79,7 @@ const CartPage = () => {
               {formatPrice(totalPrice + (totalPrice >= 999 ? 0 : 99))}
             </span>
           </div>
-          <button className="w-full bg-primary text-primary-foreground py-3.5 rounded-lg font-medium hover:bg-terracotta-dark transition-colors mb-3">
+          <button onClick={() => navigate("/checkout")} className="w-full bg-primary text-primary-foreground py-3.5 rounded-lg font-medium hover:bg-terracotta-dark transition-colors mb-3">
             Proceed to Checkout
           </button>
           <button onClick={clearCart} className="w-full text-sm text-muted-foreground hover:text-destructive transition-colors py-2">

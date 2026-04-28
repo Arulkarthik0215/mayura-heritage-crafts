@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -14,15 +14,19 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel";
 import { motion } from "framer-motion";
-import { ShoppingCart, Star, ArrowLeft, ArrowRight, Truck, Shield, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
+import { ShoppingCart, Star, ArrowLeft, ArrowRight, Truck, Shield, RotateCcw, ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { products as fallbackProducts } from "@/data/products";
 import type { Product } from "@/data/products";
 import { fetchProducts } from "@/lib/api";
 import ProductCard from "@/components/ProductCard";
 import SEO from "@/components/SEO";
+import { useCart } from "@/context/CartContext";
+import { toast } from "sonner";
 
 const ProductDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
   const [showModal, setShowModal] = useState(false);
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
@@ -108,7 +112,10 @@ const ProductDetail = () => {
     new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(price);
 
   const handleAddToCart = () => {
+    if (!product) return;
+    addToCart(product);
     setShowModal(true);
+    toast.success(`${product.name} added to cart`);
   };
 
   const images = product.images?.length ? product.images : ["/placeholder.svg"];
@@ -327,19 +334,28 @@ const ProductDetail = () => {
       <Dialog open={showModal} onOpenChange={setShowModal}>
         <DialogContent className="sm:max-w-md bg-card">
           <DialogHeader>
-            <DialogTitle className="font-serif text-2xl text-foreground text-center">Coming Soon!</DialogTitle>
+            <DialogTitle className="font-serif text-2xl text-foreground text-center flex items-center justify-center gap-2">
+              <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                <Check className="w-5 h-5 text-emerald-500" />
+              </div>
+              Added to Cart!
+            </DialogTitle>
             <DialogDescription className="text-center pt-2 text-base text-muted-foreground">
-              We're putting the finishing touches on our store.
-              <br/><br/>
-              <b>{product.name}</b> will be available for ordering very soon. Stay tuned!
+              <b>{product.name}</b> has been added to your shopping cart.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex justify-center mt-4">
+          <div className="flex gap-3 mt-4 justify-center">
             <button
               onClick={() => setShowModal(false)}
-              className="bg-primary text-primary-foreground px-8 py-2.5 rounded-lg font-medium hover:bg-terracotta-dark transition-colors"
+              className="px-6 py-2.5 rounded-lg font-medium border border-border text-foreground hover:bg-secondary transition-colors"
             >
-              Got it
+              Continue Shopping
+            </button>
+            <button
+              onClick={() => { setShowModal(false); navigate('/cart'); }}
+              className="bg-primary text-primary-foreground px-6 py-2.5 rounded-lg font-medium hover:bg-terracotta-dark transition-colors"
+            >
+              View Cart
             </button>
           </div>
         </DialogContent>
