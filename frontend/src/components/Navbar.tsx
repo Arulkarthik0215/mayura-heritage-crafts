@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingCart, Menu, X } from "lucide-react";
+import { ShoppingCart, Menu, X, User, Package } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import { useCustomerAuth } from "@/context/CustomerAuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSettings } from "@/lib/api";
@@ -16,6 +17,7 @@ const navLinks = [
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { totalItems } = useCart();
+  const { isAuthenticated } = useCustomerAuth();
   const location = useLocation();
 
   const { data: settings } = useQuery({
@@ -53,8 +55,16 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* Cart + mobile toggle */}
-          <div className="flex items-center gap-4">
+          {/* Icons + mobile toggle */}
+          <div className="flex items-center gap-2 md:gap-4">
+            <Link to="/track-order" className="p-2 hover:bg-secondary rounded-lg transition-colors text-foreground hover:text-primary" title="Track Order">
+              <Package className="w-5 h-5" />
+            </Link>
+            
+            <Link to={isAuthenticated ? "/account" : "/account/login"} className="p-2 hover:bg-secondary rounded-lg transition-colors text-foreground hover:text-primary" title="My Account">
+              <User className="w-5 h-5" />
+            </Link>
+
             <Link to="/cart" className="relative p-2 hover:bg-secondary rounded-lg transition-colors">
               <ShoppingCart className="w-5 h-5 text-foreground" />
               {totalItems > 0 && (

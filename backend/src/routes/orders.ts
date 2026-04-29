@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import prisma from '../lib/prisma';
-import { authMiddleware, AuthRequest } from '../middleware/auth';
+import { authMiddleware, optionalAuthMiddleware, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
@@ -39,7 +39,7 @@ interface CartItem {
   quantity: number;
 }
 
-router.post('/', async (req: Request, res: Response): Promise<void> => {
+router.post('/', optionalAuthMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const {
       customerName,
@@ -129,6 +129,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
         shippingCharge: shippingPaise,
         totalAmount: totalPaise,
         razorpayOrderId: razorpayOrder.id,
+        customerId: req.user?.role === 'customer' ? req.user.id : null,
         items: {
           create: orderItems,
         },
@@ -201,6 +202,35 @@ router.post('/verify', async (req: Request, res: Response): Promise<void> => {
   } catch (error) {
     console.error('Verify payment error:', error);
     res.status(500).json({ error: 'Payment verification failed' });
+  }
+});
+
+// ───────────────────────────────────────────
+// POST /api/orders/track — public tracking
+// ───────────────────────────────────────────
+router.post('/track', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { orderNumber, email } = req.body;
+
+    if (!orderNumber || !email) {
+      res.status(400).json({ error: 'Order Number and Email are required' });
+      return;
+    }
+
+    const order = await prisma.order.findUnique({
+      where: { orderNumber },
+      include: { items: true },
+    });
+
+    if (!order || order.customerEmail !== email) {
+      res.status(404).json({ error: 'Order not found or email does not match' });
+      return;
+    }
+
+    res.json({ order });
+  } catch (error) {
+    console.error('Track order error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

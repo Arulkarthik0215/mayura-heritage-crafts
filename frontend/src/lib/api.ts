@@ -2,7 +2,11 @@
  * REST API helper — all admin requests to the Express backend go through here.
  */
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+export const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
+export const api = {
+  baseUrl: API_BASE,
+};
 
 function getToken(): string | null {
   return localStorage.getItem("admin_token");
@@ -191,9 +195,13 @@ export async function createOrder(data: {
   country: string;
   items: { productId: string; quantity: number }[];
 }) {
+  const customerToken = localStorage.getItem("customer_token");
   const res = await fetch(`${API_BASE}/orders`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(customerToken ? { Authorization: `Bearer ${customerToken}` } : {}),
+    },
     body: JSON.stringify(data),
   });
   return handleResponse<{

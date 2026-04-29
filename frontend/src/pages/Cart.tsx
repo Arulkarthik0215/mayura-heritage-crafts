@@ -1,11 +1,16 @@
 import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Trash2, Plus, Minus, ShoppingCart, ArrowLeft } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import { useCustomerAuth } from "@/context/CustomerAuthContext";
+import AuthPromptModal from "@/components/AuthPromptModal";
 
 const CartPage = () => {
   const { items, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart();
+  const { isAuthenticated } = useCustomerAuth();
   const navigate = useNavigate();
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(price);
@@ -79,7 +84,16 @@ const CartPage = () => {
               {formatPrice(totalPrice + (totalPrice >= 999 ? 0 : 99))}
             </span>
           </div>
-          <button onClick={() => navigate("/checkout")} className="w-full bg-primary text-primary-foreground py-3.5 rounded-lg font-medium hover:bg-terracotta-dark transition-colors mb-3">
+          <button
+            onClick={() => {
+              if (isAuthenticated) {
+                navigate("/checkout");
+              } else {
+                setShowAuthModal(true);
+              }
+            }}
+            className="w-full bg-primary text-primary-foreground py-3.5 rounded-lg font-medium hover:bg-terracotta-dark transition-colors mb-3"
+          >
             Proceed to Checkout
           </button>
           <button onClick={clearCart} className="w-full text-sm text-muted-foreground hover:text-destructive transition-colors py-2">
@@ -87,6 +101,16 @@ const CartPage = () => {
           </button>
         </div>
       </div>
+
+      {/* Auth Prompt Modal */}
+      <AuthPromptModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onContinueAsGuest={() => {
+          setShowAuthModal(false);
+          navigate("/checkout");
+        }}
+      />
     </div>
   );
 };

@@ -5,6 +5,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
+import { CustomerAuthProvider } from "@/context/CustomerAuthContext";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Index from "./pages/Index";
@@ -16,6 +18,13 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
 import NotFound from "./pages/NotFound";
+
+// Customer pages
+import CustomerLogin from "./pages/customer/CustomerLogin";
+import CustomerRegister from "./pages/customer/CustomerRegister";
+import CustomerDashboard from "./pages/customer/CustomerDashboard";
+import CustomerOrders from "./pages/customer/CustomerOrders";
+import TrackOrder from "./pages/TrackOrder";
 
 // Admin pages
 import AdminLogin from "./pages/admin/AdminLogin";
@@ -44,8 +53,10 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthProvider>
-          <CartProvider>
-            <Sonner />
+          <CustomerAuthProvider>
+            <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || ""}>
+              <CartProvider>
+                <Sonner />
             <BrowserRouter>
               <ScrollToTop />
               <Routes>
@@ -66,13 +77,23 @@ const App = () => (
                 <Route path="/product/:id" element={<StoreLayout><ProductDetail /></StoreLayout>} />
                 <Route path="/about" element={<StoreLayout><About /></StoreLayout>} />
                 <Route path="/contact" element={<StoreLayout><Contact /></StoreLayout>} />
-                <Route path="/cart" element={<StoreLayout><Cart /></StoreLayout>} />
-                <Route path="/checkout" element={<StoreLayout><Checkout /></StoreLayout>} />
-                <Route path="/order-success" element={<StoreLayout><OrderSuccess /></StoreLayout>} />
-                <Route path="*" element={<StoreLayout><NotFound /></StoreLayout>} />
-              </Routes>
-            </BrowserRouter>
-          </CartProvider>
+                  <Route path="/cart" element={<StoreLayout><Cart /></StoreLayout>} />
+                  <Route path="/checkout" element={<StoreLayout><Checkout /></StoreLayout>} />
+                  <Route path="/order-success" element={<StoreLayout><OrderSuccess /></StoreLayout>} />
+                  
+                  {/* ── Customer Account ── */}
+                  <Route path="/account/login" element={<StoreLayout><CustomerLogin /></StoreLayout>} />
+                  <Route path="/account/register" element={<StoreLayout><CustomerRegister /></StoreLayout>} />
+                  <Route path="/account" element={<StoreLayout><CustomerDashboard /></StoreLayout>} />
+                  <Route path="/account/orders" element={<StoreLayout><CustomerOrders /></StoreLayout>} />
+                  <Route path="/track-order" element={<StoreLayout><TrackOrder /></StoreLayout>} />
+
+                  <Route path="*" element={<StoreLayout><NotFound /></StoreLayout>} />
+                </Routes>
+              </BrowserRouter>
+            </CartProvider>
+            </GoogleOAuthProvider>
+          </CustomerAuthProvider>
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>

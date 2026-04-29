@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, ShieldCheck, Truck, Globe, CreditCard, Loader2 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import { useCustomerAuth } from "@/context/CustomerAuthContext";
 import { createOrder, verifyPayment } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -23,18 +24,19 @@ const INDIAN_STATES = [
 const Checkout = () => {
   const navigate = useNavigate();
   const { items, totalPrice, clearCart } = useCart();
+  const { customer } = useCustomerAuth();
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
-    customerName: "",
-    customerEmail: "",
-    customerPhone: "",
-    addressLine1: "",
-    addressLine2: "",
-    city: "",
-    state: "Tamil Nadu",
-    postalCode: "",
-    country: "India",
+    customerName: customer?.name || "",
+    customerEmail: customer?.email || "",
+    customerPhone: customer?.phone || "",
+    addressLine1: customer?.addressLine1 || "",
+    addressLine2: customer?.addressLine2 || "",
+    city: customer?.city || "",
+    state: customer?.state || "Tamil Nadu",
+    postalCode: customer?.postalCode || "",
+    country: customer?.country || "India",
   });
 
   const formatPrice = (price: number) =>

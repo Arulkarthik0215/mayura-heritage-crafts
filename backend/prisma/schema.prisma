@@ -20,6 +20,27 @@ model User {
   updatedAt DateTime @updatedAt
 }
 
+model Customer {
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  phone         String?  @unique
+  passwordHash  String?
+  googleId      String?  @unique
+  
+  addressLine1  String?
+  addressLine2  String?
+  city          String?
+  state         String?
+  postalCode    String?
+  country       String?  @default("India")
+
+  orders        Order[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
 model Product {
   id            String   @id @default(uuid())
   name          String
@@ -77,6 +98,9 @@ model Order {
   id                String      @id @default(uuid())
   orderNumber       String      @unique
   status            String      @default("PENDING")
+
+  customerId        String?
+  customer          Customer?   @relation(fields: [customerId], references: [id])
 
   customerName      String
   customerEmail     String
