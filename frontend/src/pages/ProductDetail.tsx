@@ -22,6 +22,7 @@ import ProductCard from "@/components/ProductCard";
 import SEO from "@/components/SEO";
 import { useCart } from "@/context/CartContext";
 import { toast } from "sonner";
+import { useImageDimensions, getAdaptiveStyles } from "@/hooks/useImageDimensions";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -34,6 +35,11 @@ const ProductDetail = () => {
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slideCount, setSlideCount] = useState(0);
+
+  // Detect the primary image dimensions for adaptive layout
+  const primaryImageSrc = product?.images?.[0];
+  const { orientation, aspectRatio: imgAspectRatio, loaded: imgLoaded } = useImageDimensions(primaryImageSrc);
+  const adaptiveStyles = getAdaptiveStyles(orientation, imgAspectRatio);
 
   useEffect(() => {
     setLoading(true);
@@ -169,11 +175,19 @@ const ProductDetail = () => {
                 <CarouselContent>
                   {images.map((img, index) => (
                     <CarouselItem key={index}>
-                      <div className="aspect-[4/5] rounded-xl overflow-hidden bg-secondary">
+                      <div
+                        className="rounded-xl overflow-hidden bg-secondary flex items-center justify-center transition-all duration-500"
+                        style={{
+                          aspectRatio: imgLoaded ? adaptiveStyles.aspectRatio : "4/5",
+                        }}
+                      >
                         <img
                           src={img}
                           alt={`${product.name} - Image ${index + 1}`}
-                          className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                          className="w-full h-full transition-transform duration-500 hover:scale-105"
+                          style={{
+                            objectFit: imgLoaded ? adaptiveStyles.objectFit : "cover",
+                          }}
                         />
                       </div>
                     </CarouselItem>

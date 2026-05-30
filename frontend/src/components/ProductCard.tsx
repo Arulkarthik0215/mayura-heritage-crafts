@@ -4,6 +4,7 @@ import { Product } from "@/data/products";
 import { motion } from "framer-motion";
 import { useCart } from "@/context/CartContext";
 import { toast } from "sonner";
+import { useImageDimensions, getAdaptiveStyles } from "@/hooks/useImageDimensions";
 
 interface ProductCardProps {
   product: Product;
@@ -12,6 +13,8 @@ interface ProductCardProps {
 
 const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
   const { addToCart } = useCart();
+  const { orientation, aspectRatio, loaded } = useImageDimensions(product.images[0]);
+  const adaptiveStyles = getAdaptiveStyles(orientation, aspectRatio);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -36,13 +39,21 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
     >
       <Link to={`/product/${product.id}`} className="group block">
         <div className="bg-card rounded-lg overflow-hidden border border-border hover:shadow-lg transition-all duration-300">
-          {/* Image */}
-          <div className="relative aspect-[4/5] overflow-hidden bg-secondary">
+          {/* Image — dynamically sized based on actual image dimensions */}
+          <div
+            className="relative overflow-hidden bg-secondary flex items-center justify-center transition-all duration-500"
+            style={{
+              aspectRatio: loaded ? adaptiveStyles.aspectRatio : "4/5",
+            }}
+          >
             <img
               src={product.images[0]}
               alt={product.name}
               loading="lazy"
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              className="w-full h-full transition-transform duration-500 group-hover:scale-105"
+              style={{
+                objectFit: loaded ? adaptiveStyles.objectFit : "cover",
+              }}
             />
 
             {product.tags.includes("bestseller") && (
