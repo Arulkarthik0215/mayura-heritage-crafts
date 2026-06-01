@@ -110,6 +110,7 @@ const CartPage = () => {
           setShowAuthModal(false);
           navigate("/checkout");
         }}
+        returnUrl="/checkout"
       />
     </div>
   );

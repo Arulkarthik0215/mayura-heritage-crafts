@@ -6,9 +6,10 @@ interface AuthPromptModalProps {
   isOpen: boolean;
   onClose: () => void;
   onContinueAsGuest: () => void;
+  returnUrl?: string;
 }
 
-const AuthPromptModal = ({ isOpen, onClose, onContinueAsGuest }: AuthPromptModalProps) => {
+const AuthPromptModal = ({ isOpen, onClose, onContinueAsGuest, returnUrl }: AuthPromptModalProps) => {
   const navigate = useNavigate();
 
   return (
@@ -52,14 +53,14 @@ const AuthPromptModal = ({ isOpen, onClose, onContinueAsGuest }: AuthPromptModal
               {/* Options */}
               <div className="space-y-3">
                 <button
-                  onClick={() => navigate('/account/login')}
+                  onClick={() => navigate('/account/login', { state: { returnUrl } })}
                   className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground py-3 rounded-lg font-medium hover:bg-terracotta-dark transition-colors text-sm"
                 >
                   <LogIn className="w-4 h-4" /> Sign In
                 </button>
 
                 <button
-                  onClick={() => navigate('/account/register')}
+                  onClick={() => navigate('/account/register', { state: { returnUrl } })}
                   className="w-full flex items-center justify-center gap-2 bg-background border border-border text-foreground py-3 rounded-lg font-medium hover:border-primary/30 hover:bg-primary/5 transition-all text-sm"
                 >
                   <UserPlus className="w-4 h-4" /> Create Account

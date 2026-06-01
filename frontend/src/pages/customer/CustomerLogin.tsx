@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { GoogleLogin } from '@react-oauth/google';
 import { api } from '@/lib/api';
@@ -13,6 +13,8 @@ const CustomerLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useCustomerAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnUrl = location.state?.returnUrl || '/account';
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +29,7 @@ const CustomerLogin = () => {
       if (res.ok) {
         login(data.token, data.customer);
         toast.success('Welcome back!');
-        navigate('/account');
+        navigate(returnUrl);
       } else {
         toast.error(data.error || 'Login failed');
       }
@@ -49,7 +51,7 @@ const CustomerLogin = () => {
       if (res.ok) {
         login(data.token, data.customer);
         toast.success('Logged in with Google!');
-        navigate('/account');
+        navigate(returnUrl);
       } else {
         toast.error(data.error || 'Google login failed');
       }
@@ -140,7 +142,7 @@ const CustomerLogin = () => {
           {/* Footer */}
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Don't have an account?{' '}
-            <Link to="/account/register" className="text-primary font-medium hover:underline">
+            <Link to="/account/register" state={{ returnUrl: location.state?.returnUrl }} className="text-primary font-medium hover:underline">
               Create one
             </Link>
           </p>

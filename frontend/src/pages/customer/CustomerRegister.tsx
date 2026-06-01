@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useCustomerAuth } from '@/context/CustomerAuthContext';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
@@ -13,6 +13,8 @@ const CustomerRegister = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useCustomerAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnUrl = location.state?.returnUrl || '/account';
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +33,7 @@ const CustomerRegister = () => {
       if (res.ok) {
         login(data.token, data.customer);
         toast.success('Account created successfully!');
-        navigate('/account');
+        navigate(returnUrl);
       } else {
         toast.error(data.error || 'Registration failed');
       }
@@ -117,7 +119,7 @@ const CustomerRegister = () => {
           {/* Footer */}
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Already have an account?{' '}
-            <Link to="/account/login" className="text-primary font-medium hover:underline">
+            <Link to="/account/login" state={{ returnUrl: location.state?.returnUrl }} className="text-primary font-medium hover:underline">
               Sign in
             </Link>
           </p>
