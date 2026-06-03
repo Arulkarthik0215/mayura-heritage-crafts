@@ -1,5 +1,9 @@
 import nodemailer from 'nodemailer';
 import prisma from './prisma';
+import dns from 'dns';
+
+// Force IPv4 for Nodemailer to prevent ENETUNREACH errors on platforms without IPv6 routing (e.g. Render)
+dns.setDefaultResultOrder('ipv4first');
 
 // Create reusable transporter — configured via env vars
 const transporter = nodemailer.createTransport({
