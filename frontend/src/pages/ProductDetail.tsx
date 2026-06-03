@@ -13,11 +13,11 @@ import {
   CarouselItem,
   type CarouselApi,
 } from "@/components/ui/carousel";
-import { motion } from "framer-motion";
-import { ShoppingCart, Star, ArrowLeft, ArrowRight, Truck, Shield, RotateCcw, ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ShoppingCart, Star, ArrowLeft, ArrowRight, Truck, Shield, RotateCcw, ChevronLeft, ChevronRight, Check, Tag, Loader2, Send } from "lucide-react";
 import { products as fallbackProducts } from "@/data/products";
 import type { Product } from "@/data/products";
-import { fetchProducts } from "@/lib/api";
+import { fetchProducts, submitPriceRequest } from "@/lib/api";
 import ProductCard from "@/components/ProductCard";
 import SEO from "@/components/SEO";
 import { useCart } from "@/context/CartContext";
@@ -35,6 +35,12 @@ const ProductDetail = () => {
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slideCount, setSlideCount] = useState(0);
+
+  // Price request state
+  const [showPriceRequestModal, setShowPriceRequestModal] = useState(false);
+  const [priceRequestForm, setPriceRequestForm] = useState({ name: '', email: '', phone: '' });
+  const [priceRequestLoading, setPriceRequestLoading] = useState(false);
+  const [priceRequestSent, setPriceRequestSent] = useState(false);
 
   // Detect the primary image dimensions for adaptive layout
   const primaryImageSrc = product?.images?.[0];
@@ -117,11 +123,34 @@ const ProductDetail = () => {
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(price);
 
+  const hasPrice = product.price !== null && product.price !== undefined;
+
   const handleAddToCart = () => {
-    if (!product) return;
+    if (!product || !hasPrice) return;
     addToCart(product);
     setShowModal(true);
     toast.success(`${product.name} added to cart`);
+  };
+
+  const handlePriceRequestSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!product) return;
+    setPriceRequestLoading(true);
+    try {
+      await submitPriceRequest({
+        productId: product.id,
+        productName: product.name,
+        name: priceRequestForm.name,
+        email: priceRequestForm.email,
+        phone: priceRequestForm.phone,
+      });
+      setPriceRequestSent(true);
+      toast.success('Price request submitted! We will contact you soon.');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to submit request');
+    } finally {
+      setPriceRequestLoading(false);
+    }
   };
 
   const images = product.images?.length ? product.images : ["/placeholder.svg"];
@@ -292,12 +321,21 @@ const ProductDetail = () => {
               </span>
             </div>
 
-            <div className="flex items-baseline gap-3 mb-6">
-              <span className="text-3xl font-serif font-bold text-foreground">{formatPrice(product.price)}</span>
-              {product.originalPrice && (
-                <span className="text-lg text-muted-foreground line-through">{formatPrice(product.originalPrice)}</span>
-              )}
-            </div>
+            {hasPrice ? (
+              <div className="flex items-baseline gap-3 mb-6">
+                <span className="text-3xl font-serif font-bold text-foreground">{formatPrice(product.price!)}</span>
+                {product.originalPrice && (
+                  <span className="text-lg text-muted-foreground line-through">{formatPrice(product.originalPrice)}</span>
+                )}
+              </div>
+            ) : (
+              <div className="mb-6">
+                <span className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/10 text-amber-600 rounded-lg text-sm font-medium">
+                  <Tag className="w-4 h-4" />
+                  Price available on request
+                </span>
+              </div>
+            )}
 
             {/* About This Product */}
             <div className="bg-secondary/50 border border-border rounded-2xl p-5 mb-8">
@@ -308,12 +346,21 @@ const ProductDetail = () => {
               <p className="text-muted-foreground leading-relaxed text-[15px]">{product.description}</p>
             </div>
 
-            <button
-              onClick={handleAddToCart}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-10 py-4 rounded-lg font-medium text-lg hover:bg-terracotta-dark transition-colors mb-8"
-            >
-              <ShoppingCart className="w-5 h-5" /> Add to Cart
-            </button>
+            {hasPrice ? (
+              <button
+                onClick={handleAddToCart}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-10 py-4 rounded-lg font-medium text-lg hover:bg-terracotta-dark transition-colors mb-8"
+              >
+                <ShoppingCart className="w-5 h-5" /> Add to Cart
+              </button>
+            ) : (
+              <button
+                onClick={() => { setShowPriceRequestModal(true); setPriceRequestSent(false); }}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-10 py-4 rounded-lg font-medium text-lg hover:from-amber-600 hover:to-amber-700 transition-all shadow-lg shadow-amber-500/20 mb-8"
+              >
+                <Tag className="w-5 h-5" /> Request Price
+              </button>
+            )}
 
             {/* Trust badges */}
             <div className="grid grid-cols-3 gap-4 pt-8 border-t border-border">
@@ -345,6 +392,7 @@ const ProductDetail = () => {
 
       </div>
 
+      {/* Added to Cart Dialog */}
       <Dialog open={showModal} onOpenChange={setShowModal}>
         <DialogContent className="sm:max-w-md bg-card">
           <DialogHeader>
@@ -372,6 +420,85 @@ const ProductDetail = () => {
               View Cart
             </button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Price Request Dialog */}
+      <Dialog open={showPriceRequestModal} onOpenChange={setShowPriceRequestModal}>
+        <DialogContent className="sm:max-w-md bg-card">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-2xl text-foreground text-center flex items-center justify-center gap-2">
+              <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center">
+                <Tag className="w-5 h-5 text-amber-500" />
+              </div>
+              Request Price
+            </DialogTitle>
+            <DialogDescription className="text-center pt-2 text-base text-muted-foreground">
+              Interested in <b>{product.name}</b>? Fill in your details and we'll share the pricing with you.
+            </DialogDescription>
+          </DialogHeader>
+
+          {priceRequestSent ? (
+            <div className="text-center py-6">
+              <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
+                <Check className="w-8 h-8 text-emerald-500" />
+              </div>
+              <h3 className="text-lg font-serif font-semibold text-foreground mb-2">Request Sent!</h3>
+              <p className="text-sm text-muted-foreground mb-4">We've received your request and will contact you shortly with pricing details.</p>
+              <button
+                onClick={() => setShowPriceRequestModal(false)}
+                className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-terracotta-dark transition-colors"
+              >
+                Done
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handlePriceRequestSubmit} className="space-y-4 mt-2">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Full Name *</label>
+                <input
+                  required
+                  value={priceRequestForm.name}
+                  onChange={(e) => setPriceRequestForm((f) => ({ ...f, name: e.target.value }))}
+                  className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
+                  placeholder="Your name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Email *</label>
+                <input
+                  required
+                  type="email"
+                  value={priceRequestForm.email}
+                  onChange={(e) => setPriceRequestForm((f) => ({ ...f, email: e.target.value }))}
+                  className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
+                  placeholder="your@email.com"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Phone Number *</label>
+                <input
+                  required
+                  type="tel"
+                  value={priceRequestForm.phone}
+                  onChange={(e) => setPriceRequestForm((f) => ({ ...f, phone: e.target.value }))}
+                  className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
+                  placeholder="+91 98765 43210"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={priceRequestLoading}
+                className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-amber-700 transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                {priceRequestLoading ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Submitting…</>
+                ) : (
+                  <><Send className="w-4 h-4" /> Submit Request</>
+                )}
+              </button>
+            </form>
+          )}
         </DialogContent>
       </Dialog>
     </div>

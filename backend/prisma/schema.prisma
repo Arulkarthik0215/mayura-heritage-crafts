@@ -45,7 +45,7 @@ model Product {
   id            String   @id @default(uuid())
   name          String
   description   String
-  price         Float
+  price         Float?
   originalPrice Float?
   category      String
   images        String[] @default([])
@@ -54,8 +54,23 @@ model Product {
   reviews       Int      @default(0)
   inStock       Boolean  @default(true)
   tags          String[] @default([])
+  hasCustomShipping     Boolean @default(false)
+  shippingChargeIndia   Float?
+  shippingChargeForeign Float?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+model PriceRequest {
+  id          String   @id @default(uuid())
+  productId   String
+  productName String
+  name        String
+  email       String
+  phone       String
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Category {

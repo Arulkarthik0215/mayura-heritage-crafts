@@ -245,3 +245,43 @@ export async function updateOrderStatus(id: string, data: { status?: string; tra
   });
   return handleResponse<{ order: any }>(res);
 }
+
+/* ─── Price Requests ─── */
+export async function submitPriceRequest(data: {
+  productId: string;
+  productName: string;
+  name: string;
+  email: string;
+  phone: string;
+}) {
+  const res = await fetch(`${API_BASE}/price-requests`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return handleResponse<{ priceRequest: any }>(res);
+}
+
+export async function fetchPriceRequests() {
+  const res = await fetch(`${API_BASE}/price-requests`, {
+    headers: { ...authHeaders() },
+  });
+  return handleResponse<{ priceRequests: any[] }>(res);
+}
+
+export async function updatePriceRequest(id: string, data: { status?: string }) {
+  const res = await fetch(`${API_BASE}/price-requests/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(data),
+  });
+  return handleResponse<{ priceRequest: any }>(res);
+}
+
+export async function deletePriceRequest(id: string) {
+  const res = await fetch(`${API_BASE}/price-requests/${id}`, {
+    method: "DELETE",
+    headers: { ...authHeaders() },
+  });
+  return handleResponse<{ message: string }>(res);
+}

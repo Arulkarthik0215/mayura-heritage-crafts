@@ -22,6 +22,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [items, setItems] = useState<CartItem[]>([]);
 
   const addToCart = useCallback((product: Product) => {
+    // Reject products without a price
+    if (product.price === null || product.price === undefined) return;
     setItems((prev) => {
       const existing = prev.find((item) => item.product.id === product.id);
       if (existing) {
@@ -50,7 +52,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const clearCart = useCallback(() => setItems([]), []);
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  const totalPrice = items.reduce((sum, item) => sum + (item.product.price ?? 0) * item.quantity, 0);
 
   return (
     <CartContext.Provider value={{ items, addToCart, removeFromCart, updateQuantity, clearCart, totalItems, totalPrice }}>

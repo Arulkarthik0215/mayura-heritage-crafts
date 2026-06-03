@@ -2,7 +2,7 @@ export interface Product {
   id: string;
   name: string;
   description: string;
-  price: number;
+  price?: number | null;
   originalPrice?: number;
   category: "golu" | "idols" | "decor";
   images: string[];
@@ -11,6 +11,9 @@ export interface Product {
   reviews: number;
   inStock: boolean;
   tags: string[];
+  hasCustomShipping?: boolean;
+  shippingChargeIndia?: number | null;
+  shippingChargeForeign?: number | null;
 }
 
 export const categories = [

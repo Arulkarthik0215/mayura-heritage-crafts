@@ -68,10 +68,10 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
  */
 router.post('/', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { name, description, price, originalPrice, category, images, featured, rating, reviews, inStock, tags } = req.body;
+    const { name, description, price, originalPrice, category, images, featured, rating, reviews, inStock, tags, hasCustomShipping, shippingChargeIndia, shippingChargeForeign } = req.body;
 
-    if (!name || !description || price === undefined || !category) {
-      res.status(400).json({ error: 'Name, description, price, and category are required' });
+    if (!name || !description || !category) {
+      res.status(400).json({ error: 'Name, description, and category are required' });
       return;
     }
 
@@ -79,7 +79,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response): Promis
       data: {
         name,
         description,
-        price: parseFloat(price),
+        price: price !== undefined && price !== null && price !== '' ? parseFloat(price) : null,
         originalPrice: originalPrice ? parseFloat(originalPrice) : null,
         category,
         images: images || [],
@@ -88,6 +88,9 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response): Promis
         reviews: reviews ? parseInt(reviews) : 0,
         inStock: inStock !== undefined ? inStock : true,
         tags: tags || [],
+        hasCustomShipping: hasCustomShipping || false,
+        shippingChargeIndia: shippingChargeIndia !== undefined && shippingChargeIndia !== null && shippingChargeIndia !== '' ? parseFloat(shippingChargeIndia) : null,
+        shippingChargeForeign: shippingChargeForeign !== undefined && shippingChargeForeign !== null && shippingChargeForeign !== '' ? parseFloat(shippingChargeForeign) : null,
       },
     });
 
@@ -111,14 +114,14 @@ router.put('/:id', authMiddleware, async (req: AuthRequest, res: Response): Prom
       return;
     }
 
-    const { name, description, price, originalPrice, category, images, featured, rating, reviews, inStock, tags } = req.body;
+    const { name, description, price, originalPrice, category, images, featured, rating, reviews, inStock, tags, hasCustomShipping, shippingChargeIndia, shippingChargeForeign } = req.body;
 
     const product = await prisma.product.update({
       where: { id: req.params.id as string },
       data: {
         ...(name !== undefined && { name }),
         ...(description !== undefined && { description }),
-        ...(price !== undefined && { price: parseFloat(price) }),
+        ...(price !== undefined && { price: price !== null && price !== '' ? parseFloat(price) : null }),
         ...(originalPrice !== undefined && { originalPrice: originalPrice ? parseFloat(originalPrice) : null }),
         ...(category !== undefined && { category }),
         ...(images !== undefined && { images }),
@@ -127,6 +130,9 @@ router.put('/:id', authMiddleware, async (req: AuthRequest, res: Response): Prom
         ...(reviews !== undefined && { reviews: parseInt(reviews) }),
         ...(inStock !== undefined && { inStock }),
         ...(tags !== undefined && { tags }),
+        ...(hasCustomShipping !== undefined && { hasCustomShipping }),
+        ...(shippingChargeIndia !== undefined && { shippingChargeIndia: shippingChargeIndia !== null && shippingChargeIndia !== '' ? parseFloat(shippingChargeIndia) : null }),
+        ...(shippingChargeForeign !== undefined && { shippingChargeForeign: shippingChargeForeign !== null && shippingChargeForeign !== '' ? parseFloat(shippingChargeForeign) : null }),
       },
     });
 

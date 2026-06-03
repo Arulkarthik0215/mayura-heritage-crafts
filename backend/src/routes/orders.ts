@@ -26,9 +26,45 @@ const DOMESTIC_FREE_THRESHOLD = 99900; // ₹999 in paise
 const DOMESTIC_SHIPPING = 9900;        // ₹99 in paise
 const INTERNATIONAL_SHIPPING = 149900; // ₹1499 in paise
 
-function calcShipping(subtotalPaise: number, country: string): number {
-  if (country !== 'India') return INTERNATIONAL_SHIPPING;
-  return subtotalPaise >= DOMESTIC_FREE_THRESHOLD ? 0 : DOMESTIC_SHIPPING;
+/**
+ * Calculate total shipping by summing per-product charges.
+ * Products with custom shipping use their own rates.
+ * Products without custom shipping use global defaults.
+ */
+function calcShipping(
+  products: Array<{
+    hasCustomShipping: boolean;
+    shippingChargeIndia: number | null;
+    shippingChargeForeign: number | null;
+    quantity: number;
+  }>,
+  subtotalPaise: number,
+  country: string
+): number {
+  let totalShipping = 0;
+  let hasNonCustomProduct = false;
+
+  for (const p of products) {
+    if (p.hasCustomShipping) {
+      const charge = country !== 'India'
+        ? (p.shippingChargeForeign ?? 0)
+        : (p.shippingChargeIndia ?? 0);
+      totalShipping += Math.round(charge * 100) * p.quantity; // convert ₹ to paise
+    } else {
+      hasNonCustomProduct = true;
+    }
+  }
+
+  // For products without custom shipping, apply global defaults
+  if (hasNonCustomProduct) {
+    if (country !== 'India') {
+      totalShipping += INTERNATIONAL_SHIPPING;
+    } else if (subtotalPaise < DOMESTIC_FREE_THRESHOLD) {
+      totalShipping += DOMESTIC_SHIPPING;
+    }
+  }
+
+  return totalShipping;
 }
 
 // ───────────────────────────────────────────
@@ -86,6 +122,15 @@ router.post('/', optionalAuthMiddleware, async (req: AuthRequest, res: Response)
       return;
     }
 
+    // Reject products without a price
+    const pricelessProducts = products.filter((p) => p.price === null || p.price === undefined);
+    if (pricelessProducts.length > 0) {
+      res.status(400).json({
+        error: `Cannot order products without a price: ${pricelessProducts.map((p) => p.name).join(', ')}. Please request a price first.`,
+      });
+      return;
+    }
+
     // Build order items with server-side pricing
     const orderItems = items.map((item) => {
       const product = products.find((p) => p.id === item.productId)!;
@@ -93,13 +138,25 @@ router.post('/', optionalAuthMiddleware, async (req: AuthRequest, res: Response)
         productId: product.id,
         productName: product.name,
         productImage: product.images[0] || null,
-        price: Math.round(product.price * 100), // convert ₹ to paise
+        price: Math.round(product.price! * 100), // convert ₹ to paise
         quantity: item.quantity,
       };
     });
 
     const subtotalPaise = orderItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
-    const shippingPaise = calcShipping(subtotalPaise, country);
+
+    // Build shipping info per product
+    const shippingProducts = items.map((item) => {
+      const product = products.find((p) => p.id === item.productId)!;
+      return {
+        hasCustomShipping: product.hasCustomShipping,
+        shippingChargeIndia: product.shippingChargeIndia,
+        shippingChargeForeign: product.shippingChargeForeign,
+        quantity: item.quantity,
+      };
+    });
+
+    const shippingPaise = calcShipping(shippingProducts, subtotalPaise, country);
     const totalPaise = subtotalPaise + shippingPaise;
 
     const orderNumber = generateOrderNumber();

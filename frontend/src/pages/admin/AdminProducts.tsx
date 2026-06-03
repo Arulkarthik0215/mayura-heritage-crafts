@@ -12,6 +12,8 @@ import {
   ImagePlus,
   Check,
   AlertCircle,
+  Truck,
+  Tag,
 } from "lucide-react";
 import {
   fetchProducts,
@@ -34,6 +36,10 @@ interface ProductForm {
   reviews: string;
   inStock: boolean;
   tags: string;
+  hasPrice: boolean;
+  hasCustomShipping: boolean;
+  shippingChargeIndia: string;
+  shippingChargeForeign: string;
 }
 
 const emptyForm: ProductForm = {
@@ -48,6 +54,10 @@ const emptyForm: ProductForm = {
   reviews: "0",
   inStock: true,
   tags: "",
+  hasPrice: true,
+  hasCustomShipping: false,
+  shippingChargeIndia: "",
+  shippingChargeForeign: "",
 };
 
 const AdminProducts = () => {
@@ -97,6 +107,10 @@ const AdminProducts = () => {
       reviews: String(product.reviews ?? "0"),
       inStock: product.inStock ?? true,
       tags: (product.tags || []).join(", "),
+      hasPrice: product.price !== null && product.price !== undefined,
+      hasCustomShipping: product.hasCustomShipping || false,
+      shippingChargeIndia: String(product.shippingChargeIndia ?? ""),
+      shippingChargeForeign: String(product.shippingChargeForeign ?? ""),
     });
     setShowModal(true);
   };
@@ -134,8 +148,8 @@ const AdminProducts = () => {
       const payload = {
         name: form.name,
         description: form.description,
-        price: form.price,
-        originalPrice: form.originalPrice || null,
+        price: form.hasPrice ? form.price : null,
+        originalPrice: form.hasPrice && form.originalPrice ? form.originalPrice : null,
         category: form.category,
         images: form.images,
         featured: form.featured,
@@ -146,6 +160,9 @@ const AdminProducts = () => {
           .split(",")
           .map((t) => t.trim())
           .filter(Boolean),
+        hasCustomShipping: form.hasCustomShipping,
+        shippingChargeIndia: form.hasCustomShipping && form.shippingChargeIndia ? form.shippingChargeIndia : null,
+        shippingChargeForeign: form.hasCustomShipping && form.shippingChargeForeign ? form.shippingChargeForeign : null,
       };
 
       if (editing) {
@@ -247,7 +264,10 @@ const AdminProducts = () => {
                 </span>
                 {/* Price */}
                 <span className="text-sm font-semibold text-cream">
-                  ₹{product.price?.toLocaleString("en-IN")}
+                  {product.price !== null && product.price !== undefined
+                    ? `₹${product.price?.toLocaleString("en-IN")}`
+                    : <span className="text-xs text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full">No Price</span>
+                  }
                 </span>
                 {/* Status */}
                 <span className={`flex items-center gap-1 text-xs font-medium ${product.inStock ? "text-emerald-400" : "text-red-400"}`}>
@@ -374,33 +394,58 @@ const AdminProducts = () => {
                   />
                 </div>
 
-                {/* Price row */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-cream/60 uppercase tracking-wider mb-1.5">Price (₹) *</label>
-                    <input
-                      required
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={form.price}
-                      onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
-                      className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-cream text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-cream/20"
-                      placeholder="e.g. 4999"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-cream/60 uppercase tracking-wider mb-1.5">Original Price</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={form.originalPrice}
-                      onChange={(e) => setForm((f) => ({ ...f, originalPrice: e.target.value }))}
-                      className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-cream text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-cream/20"
-                      placeholder="e.g. 5999"
-                    />
-                  </div>
+                {/* Price toggle + fields */}
+                <div className="space-y-3">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <div
+                      onClick={() => setForm((f) => ({ ...f, hasPrice: !f.hasPrice }))}
+                      className={`w-10 h-6 rounded-full transition-colors flex items-center px-0.5 ${
+                        form.hasPrice ? "bg-amber-500" : "bg-white/10"
+                      }`}
+                    >
+                      <div
+                        className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${
+                          form.hasPrice ? "translate-x-4" : "translate-x-0"
+                        }`}
+                      />
+                    </div>
+                    <span className="text-sm text-cream/70 flex items-center gap-1.5">
+                      <Tag className="w-3.5 h-3.5" /> Set Price
+                    </span>
+                    {!form.hasPrice && (
+                      <span className="text-[10px] text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full">Customers will "Request Price"</span>
+                    )}
+                  </label>
+
+                  {form.hasPrice && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-medium text-cream/60 uppercase tracking-wider mb-1.5">Price (₹) *</label>
+                        <input
+                          required
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={form.price}
+                          onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
+                          className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-cream text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-cream/20"
+                          placeholder="e.g. 4999"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-cream/60 uppercase tracking-wider mb-1.5">Original Price</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={form.originalPrice}
+                          onChange={(e) => setForm((f) => ({ ...f, originalPrice: e.target.value }))}
+                          className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-cream text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-cream/20"
+                          placeholder="e.g. 5999"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Category + Tags */}
@@ -486,6 +531,59 @@ const AdminProducts = () => {
                     </div>
                     <span className="text-sm text-cream/70">In Stock</span>
                   </label>
+                </div>
+
+                {/* Custom Shipping toggle + fields */}
+                <div className="space-y-3">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <div
+                      onClick={() => setForm((f) => ({ ...f, hasCustomShipping: !f.hasCustomShipping }))}
+                      className={`w-10 h-6 rounded-full transition-colors flex items-center px-0.5 ${
+                        form.hasCustomShipping ? "bg-blue-500" : "bg-white/10"
+                      }`}
+                    >
+                      <div
+                        className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${
+                          form.hasCustomShipping ? "translate-x-4" : "translate-x-0"
+                        }`}
+                      />
+                    </div>
+                    <span className="text-sm text-cream/70 flex items-center gap-1.5">
+                      <Truck className="w-3.5 h-3.5" /> Custom Shipping
+                    </span>
+                    {!form.hasCustomShipping && (
+                      <span className="text-[10px] text-cream/30">Uses default rates</span>
+                    )}
+                  </label>
+
+                  {form.hasCustomShipping && (
+                    <div className="grid grid-cols-2 gap-4 pl-1">
+                      <div>
+                        <label className="block text-xs font-medium text-cream/60 uppercase tracking-wider mb-1.5">India Shipping (₹)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={form.shippingChargeIndia}
+                          onChange={(e) => setForm((f) => ({ ...f, shippingChargeIndia: e.target.value }))}
+                          className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-cream text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-cream/20"
+                          placeholder="e.g. 99"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-cream/60 uppercase tracking-wider mb-1.5">Foreign Shipping (₹)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={form.shippingChargeForeign}
+                          onChange={(e) => setForm((f) => ({ ...f, shippingChargeForeign: e.target.value }))}
+                          className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-cream text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-cream/20"
+                          placeholder="e.g. 1499"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Images */}

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ShoppingCart, Star, Check } from "lucide-react";
+import { ShoppingCart, Star, Check, Tag } from "lucide-react";
 import { Product } from "@/data/products";
 import { motion } from "framer-motion";
 import { useCart } from "@/context/CartContext";
@@ -15,9 +15,11 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
   const { addToCart } = useCart();
   const { orientation, aspectRatio, loaded } = useImageDimensions(product.images[0]);
   const adaptiveStyles = getAdaptiveStyles(orientation, aspectRatio);
+  const hasPrice = product.price !== null && product.price !== undefined;
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
+    if (!hasPrice) return;
     addToCart(product);
     toast.success(
       <div className="flex items-center gap-2">
@@ -81,19 +83,31 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="font-serif font-bold text-lg text-foreground">{formatPrice(product.price)}</span>
-                {product.originalPrice && (
-                  <span className="text-sm text-muted-foreground line-through">{formatPrice(product.originalPrice)}</span>
-                )}
-              </div>
-              <button
-                onClick={handleAddToCart}
-                className="p-2 bg-primary text-primary-foreground rounded-lg hover:bg-terracotta-dark transition-colors"
-                aria-label="Add to cart"
-              >
-                <ShoppingCart className="w-4 h-4" />
-              </button>
+              {hasPrice ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    <span className="font-serif font-bold text-lg text-foreground">{formatPrice(product.price!)}</span>
+                    {product.originalPrice && (
+                      <span className="text-sm text-muted-foreground line-through">{formatPrice(product.originalPrice)}</span>
+                    )}
+                  </div>
+                  <button
+                    onClick={handleAddToCart}
+                    className="p-2 bg-primary text-primary-foreground rounded-lg hover:bg-terracotta-dark transition-colors"
+                    aria-label="Add to cart"
+                  >
+                    <ShoppingCart className="w-4 h-4" />
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={(e) => e.preventDefault()}
+                  className="w-full flex items-center justify-center gap-2 py-2 bg-amber-500/10 text-amber-600 rounded-lg text-sm font-medium hover:bg-amber-500/20 transition-colors"
+                >
+                  <Tag className="w-3.5 h-3.5" />
+                  Request Price
+                </button>
+              )}
             </div>
           </div>
         </div>

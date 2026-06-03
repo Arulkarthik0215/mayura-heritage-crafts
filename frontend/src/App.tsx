@@ -35,6 +35,7 @@ import AdminCategories from "./pages/admin/AdminCategories";
 import AdminTestimonials from "./pages/admin/AdminTestimonials";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminOrders from "./pages/admin/AdminOrders";
+import AdminPriceRequests from "./pages/admin/AdminPriceRequests";
 
 import ScrollToTop from "@/components/ScrollToTop";
 const queryClient = new QueryClient();
@@ -68,6 +69,7 @@ const App = () => (
                   <Route path="orders" element={<AdminOrders />} />
                   <Route path="categories" element={<AdminCategories />} />
                   <Route path="testimonials" element={<AdminTestimonials />} />
+                  <Route path="price-requests" element={<AdminPriceRequests />} />
                   <Route path="settings" element={<AdminSettings />} />
                 </Route>
 

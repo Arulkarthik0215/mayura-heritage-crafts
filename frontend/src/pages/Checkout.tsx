@@ -43,7 +43,35 @@ const Checkout = () => {
     new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(price);
 
   const isIndia = form.country === "India";
-  const shippingCharge = isIndia ? (totalPrice >= 999 ? 0 : 99) : 1499;
+
+  // Calculate shipping: sum per-product custom charges + global defaults for non-custom products
+  const shippingCharge = (() => {
+    let total = 0;
+    let hasNonCustomProduct = false;
+
+    for (const { product, quantity } of items) {
+      if (product.hasCustomShipping) {
+        const charge = isIndia
+          ? (product.shippingChargeIndia ?? 0)
+          : (product.shippingChargeForeign ?? 0);
+        total += charge * quantity;
+      } else {
+        hasNonCustomProduct = true;
+      }
+    }
+
+    // Apply global defaults for non-custom products
+    if (hasNonCustomProduct) {
+      if (!isIndia) {
+        total += 1499;
+      } else if (totalPrice < 999) {
+        total += 99;
+      }
+    }
+
+    return total;
+  })();
+
   const grandTotal = totalPrice + shippingCharge;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
