@@ -298,7 +298,7 @@ const ProductDetail = () => {
           {/* Info */}
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
             <p className="text-primary text-sm font-medium uppercase tracking-widest mb-2">{product.category}</p>
-            <h1 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-4">{product.name}</h1>
+            <h1 className="text-2xl md:text-4xl font-serif font-bold text-foreground mb-4">{product.name}</h1>
 
             <div className="flex items-center gap-4 mb-6">
               <div className="flex items-center gap-1">

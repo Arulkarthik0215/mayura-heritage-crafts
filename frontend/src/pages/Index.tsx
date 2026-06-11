@@ -107,7 +107,7 @@ const Index = () => {
             className="max-w-2xl"
           >
             <p className="text-gold font-medium text-sm tracking-widest uppercase mb-4">✦ Handcrafted with Devotion</p>
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-bold text-cream leading-tight mb-6">
+            <h1 className="text-3xl md:text-6xl lg:text-7xl font-serif font-bold text-cream leading-tight mb-6">
               {settings?.heroTitle || "Sacred Artistry for Your Home"}
             </h1>
             <p className="text-cream/80 text-lg md:text-xl leading-relaxed mb-8 max-w-lg">
@@ -251,7 +251,7 @@ const Index = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-warm-brown to-foreground p-10 md:p-16 text-center"
+            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-warm-brown to-foreground p-6 md:p-16 text-center"
           >
             <div className="absolute inset-0 opacity-10">
               <div className="absolute top-10 left-10 w-32 h-32 rounded-full bg-gold blur-3xl" />

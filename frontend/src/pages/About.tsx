@@ -25,7 +25,7 @@ const AboutPage = () => {
       </div>
       <div className="container-custom relative z-10 text-center">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-4xl md:text-6xl font-serif font-bold text-cream mb-4">About Us</h1>
+          <h1 className="text-3xl md:text-6xl font-serif font-bold text-cream mb-4">About Us</h1>
           <p className="text-cream/80 text-lg max-w-2xl mx-auto">
             Where Heritage Becomes a Living Experience.
           </p>
