@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Pencil, Trash2, X, Check, AlertCircle, Layers } from "lucide-react";
-import { fetchCategories, createCategory, updateCategory, deleteCategory } from "@/lib/api";
+import { Plus, Pencil, Trash2, X, Check, AlertCircle, Layers, ChevronDown, ChevronRight, FolderTree } from "lucide-react";
+import { fetchCategories, createCategory, updateCategory, deleteCategory, createSubCategory, updateSubCategory, deleteSubCategory } from "@/lib/api";
 import { toast } from "sonner";
 
 interface CategoryForm {
@@ -11,7 +11,14 @@ interface CategoryForm {
   icon: string;
 }
 
+interface SubCategoryForm {
+  slug: string;
+  name: string;
+  description: string;
+}
+
 const emptyForm: CategoryForm = { slug: "", name: "", description: "", icon: "" };
+const emptySubForm: SubCategoryForm = { slug: "", name: "", description: "" };
 
 const AdminCategories = () => {
   const [categories, setCategories] = useState<any[]>([]);
@@ -21,6 +28,15 @@ const AdminCategories = () => {
   const [form, setForm] = useState<CategoryForm>(emptyForm);
   const [submitting, setSubmitting] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+
+  // Subcategory state
+  const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set());
+  const [showSubModal, setShowSubModal] = useState(false);
+  const [subParentSlug, setSubParentSlug] = useState<string>("");
+  const [editingSub, setEditingSub] = useState<any | null>(null);
+  const [subForm, setSubForm] = useState<SubCategoryForm>(emptySubForm);
+  const [subSubmitting, setSubSubmitting] = useState(false);
+  const [deleteSubConfirm, setDeleteSubConfirm] = useState<string | null>(null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -32,6 +48,16 @@ const AdminCategories = () => {
 
   useEffect(() => { load(); }, [load]);
 
+  const toggleExpand = (catId: string) => {
+    setExpandedCats((prev) => {
+      const next = new Set(prev);
+      if (next.has(catId)) next.delete(catId);
+      else next.add(catId);
+      return next;
+    });
+  };
+
+  // ── Category CRUD ──
   const openCreate = () => {
     setEditing(null);
     setForm(emptyForm);
@@ -80,13 +106,63 @@ const AdminCategories = () => {
     }
   };
 
+  // ── Subcategory CRUD ──
+  const openCreateSub = (parentSlug: string) => {
+    setEditingSub(null);
+    setSubParentSlug(parentSlug);
+    setSubForm(emptySubForm);
+    setShowSubModal(true);
+  };
+
+  const openEditSub = (sub: any) => {
+    setEditingSub(sub);
+    setSubParentSlug(sub.parentSlug);
+    setSubForm({
+      slug: sub.slug || "",
+      name: sub.name || "",
+      description: sub.description || "",
+    });
+    setShowSubModal(true);
+  };
+
+  const handleSubSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubSubmitting(true);
+    try {
+      if (editingSub) {
+        await updateSubCategory(editingSub.id, subForm);
+        toast.success("Subcategory updated");
+      } else {
+        await createSubCategory(subParentSlug, subForm);
+        toast.success("Subcategory created");
+      }
+      setShowSubModal(false);
+      load();
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setSubSubmitting(false);
+    }
+  };
+
+  const handleDeleteSub = async (id: string) => {
+    try {
+      await deleteSubCategory(id);
+      toast.success("Subcategory deleted");
+      setDeleteSubConfirm(null);
+      load();
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-serif font-bold text-cream">Categories</h1>
-          <p className="text-cream/40 text-sm mt-1">Manage product categories</p>
+          <p className="text-cream/40 text-sm mt-1">Manage product categories & subcategories</p>
         </div>
         <button
           onClick={openCreate}
@@ -107,41 +183,123 @@ const AdminCategories = () => {
           <p className="text-cream/40 text-sm">No categories yet</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {categories.map((cat, i) => (
-            <motion.div
-              key={cat.id}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className="bg-[hsl(20,15%,14%)] border border-white/5 rounded-2xl p-5 hover:border-white/10 transition-colors group"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="text-3xl">{cat.icon}</div>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => openEdit(cat)}
-                    className="p-1.5 text-cream/40 hover:text-cream hover:bg-white/5 rounded-lg transition-colors"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setDeleteConfirm(cat.id)}
-                    className="p-1.5 text-cream/40 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+        <div className="space-y-4">
+          {categories.map((cat, i) => {
+            const isExpanded = expandedCats.has(cat.id);
+            const subCount = cat.subCategories?.length || 0;
+
+            return (
+              <motion.div
+                key={cat.id}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className="bg-[hsl(20,15%,14%)] border border-white/5 rounded-2xl overflow-hidden hover:border-white/10 transition-colors"
+              >
+                {/* Category header row */}
+                <div className="p-5 flex items-start justify-between">
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <div className="text-3xl shrink-0">{cat.icon}</div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-sm font-semibold text-cream mb-1">{cat.name}</h3>
+                      <p className="text-xs text-cream/40 mb-2">{cat.description}</p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-cream/30 bg-white/5 px-2 py-0.5 rounded-full">{cat.slug}</span>
+                        {subCount > 0 && (
+                          <span className="text-[10px] text-primary/70 bg-primary/10 px-2 py-0.5 rounded-full">
+                            {subCount} subcategor{subCount === 1 ? "y" : "ies"}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => openCreateSub(cat.slug)}
+                      className="p-1.5 text-cream/40 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                      title="Add Subcategory"
+                    >
+                      <FolderTree className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => openEdit(cat)}
+                      className="p-1.5 text-cream/40 hover:text-cream hover:bg-white/5 rounded-lg transition-colors"
+                      title="Edit"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setDeleteConfirm(cat.id)}
+                      className="p-1.5 text-cream/40 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                    {subCount > 0 && (
+                      <button
+                        onClick={() => toggleExpand(cat.id)}
+                        className="p-1.5 text-cream/40 hover:text-cream hover:bg-white/5 rounded-lg transition-colors"
+                        title={isExpanded ? "Collapse" : "Expand"}
+                      >
+                        {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <h3 className="text-sm font-semibold text-cream mb-1">{cat.name}</h3>
-              <p className="text-xs text-cream/40 mb-2">{cat.description}</p>
-              <span className="text-[10px] text-cream/30 bg-white/5 px-2 py-0.5 rounded-full">{cat.slug}</span>
-            </motion.div>
-          ))}
+
+                {/* Subcategories list */}
+                <AnimatePresence>
+                  {isExpanded && subCount > 0 && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="border-t border-white/5 px-5 pb-4 pt-3">
+                        <p className="text-[10px] text-cream/30 uppercase tracking-wider font-medium mb-2 pl-1">Subcategories</p>
+                        <div className="space-y-1.5">
+                          {cat.subCategories.map((sub: any) => (
+                            <div
+                              key={sub.id}
+                              className="flex items-center justify-between px-3 py-2 bg-white/[0.03] rounded-xl group hover:bg-white/[0.05] transition-colors"
+                            >
+                              <div className="min-w-0 flex-1">
+                                <span className="text-sm text-cream/80 font-medium">{sub.name}</span>
+                                {sub.description && (
+                                  <span className="text-xs text-cream/30 ml-2">— {sub.description}</span>
+                                )}
+                                <span className="text-[10px] text-cream/20 bg-white/5 px-1.5 py-0.5 rounded ml-2">{sub.slug}</span>
+                              </div>
+                              <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={() => openEditSub(sub)}
+                                  className="p-1 text-cream/30 hover:text-cream hover:bg-white/5 rounded transition-colors"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => setDeleteSubConfirm(sub.id)}
+                                  className="p-1 text-cream/30 hover:text-red-400 hover:bg-red-400/10 rounded transition-colors"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            );
+          })}
         </div>
       )}
 
-      {/* Delete confirmation */}
+      {/* Delete category confirmation */}
       <AnimatePresence>
         {deleteConfirm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -168,7 +326,34 @@ const AdminCategories = () => {
         )}
       </AnimatePresence>
 
-      {/* Create/Edit Modal */}
+      {/* Delete subcategory confirmation */}
+      <AnimatePresence>
+        {deleteSubConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setDeleteSubConfirm(null)} className="absolute inset-0 bg-black/60" />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative w-full max-w-sm bg-[hsl(20,15%,16%)] border border-white/10 rounded-2xl p-6 shadow-2xl z-10"
+            >
+              <div className="text-center">
+                <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-red-400/10 flex items-center justify-center">
+                  <AlertCircle className="w-6 h-6 text-red-400" />
+                </div>
+                <h3 className="text-lg font-serif font-bold text-cream mb-2">Delete Subcategory?</h3>
+                <p className="text-sm text-cream/50 mb-6">This action cannot be undone.</p>
+                <div className="flex gap-3">
+                  <button onClick={() => setDeleteSubConfirm(null)} className="flex-1 py-2.5 bg-white/5 text-cream rounded-xl text-sm font-medium hover:bg-white/10 transition-colors">Cancel</button>
+                  <button onClick={() => handleDeleteSub(deleteSubConfirm)} className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-medium hover:bg-red-600 transition-colors">Delete</button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Create/Edit Category Modal */}
       <AnimatePresence>
         {showModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -205,6 +390,52 @@ const AdminCategories = () => {
                   <button type="submit" disabled={submitting} className="flex-1 py-2.5 bg-gradient-to-r from-primary to-terracotta-dark text-white rounded-xl text-sm font-medium hover:shadow-lg hover:shadow-primary/25 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
                     {submitting ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Check className="w-4 h-4" />}
                     {editing ? "Update" : "Create"}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Create/Edit Subcategory Modal */}
+      <AnimatePresence>
+        {showSubModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowSubModal(false)} className="absolute inset-0 bg-black/60" />
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 30 }}
+              className="relative w-full max-w-md max-h-[90vh] overflow-y-auto bg-[hsl(20,15%,14%)] border border-white/10 rounded-2xl shadow-2xl z-10"
+            >
+              <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
+                <div>
+                  <h2 className="text-lg font-serif font-bold text-cream">{editingSub ? "Edit Subcategory" : "Add Subcategory"}</h2>
+                  <p className="text-xs text-cream/30 mt-0.5">
+                    Parent: <span className="text-primary/70">{subParentSlug}</span>
+                  </p>
+                </div>
+                <button onClick={() => setShowSubModal(false)} className="text-cream/40 hover:text-cream"><X className="w-5 h-5" /></button>
+              </div>
+              <form onSubmit={handleSubSubmit} className="p-6 space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-cream/60 uppercase tracking-wider mb-1.5">Name *</label>
+                  <input required value={subForm.name} onChange={(e) => setSubForm((f) => ({ ...f, name: e.target.value }))} className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-cream text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-cream/20" placeholder="e.g. Brass Lamps" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-cream/60 uppercase tracking-wider mb-1.5">Slug *</label>
+                  <input required value={subForm.slug} onChange={(e) => setSubForm((f) => ({ ...f, slug: e.target.value }))} className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-cream text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-cream/20" placeholder="e.g. brass-lamps" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-cream/60 uppercase tracking-wider mb-1.5">Description</label>
+                  <input value={subForm.description} onChange={(e) => setSubForm((f) => ({ ...f, description: e.target.value }))} className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-cream text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-cream/20" placeholder="Optional description" />
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button type="button" onClick={() => setShowSubModal(false)} className="flex-1 py-2.5 bg-white/5 text-cream rounded-xl text-sm font-medium hover:bg-white/10 transition-colors">Cancel</button>
+                  <button type="submit" disabled={subSubmitting} className="flex-1 py-2.5 bg-gradient-to-r from-primary to-terracotta-dark text-white rounded-xl text-sm font-medium hover:shadow-lg hover:shadow-primary/25 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                    {subSubmitting ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Check className="w-4 h-4" />}
+                    {editingSub ? "Update" : "Create"}
                   </button>
                 </div>
               </form>

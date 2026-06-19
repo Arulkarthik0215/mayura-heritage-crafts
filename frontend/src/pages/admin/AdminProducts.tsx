@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import {
   fetchProducts,
+  fetchCategories,
   createProduct,
   updateProduct,
   deleteProduct,
@@ -30,6 +31,7 @@ interface ProductForm {
   price: string;
   originalPrice: string;
   category: string;
+  subCategory: string;
   images: string[];
   featured: boolean;
   rating: string;
@@ -47,7 +49,8 @@ const emptyForm: ProductForm = {
   description: "",
   price: "",
   originalPrice: "",
-  category: "golu",
+  category: "",
+  subCategory: "",
   images: [],
   featured: false,
   rating: "0",
@@ -70,13 +73,19 @@ const AdminProducts = () => {
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [apiCategories, setApiCategories] = useState<any[]>([]);
 
   const load = useCallback(() => {
     setLoading(true);
-    fetchProducts()
-      .then((res) => setProducts(res.products || []))
-      .catch((e) => toast.error(e.message))
-      .finally(() => setLoading(false));
+    Promise.all([
+      fetchProducts().catch(() => ({ products: [] })),
+      fetchCategories().catch(() => ({ categories: [] })),
+    ]).then(([prodRes, catRes]) => {
+      setProducts(prodRes.products || []);
+      setApiCategories(catRes.categories || []);
+    })
+    .catch((e) => toast.error(e.message))
+    .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -89,7 +98,8 @@ const AdminProducts = () => {
 
   const openCreate = () => {
     setEditing(null);
-    setForm(emptyForm);
+    const firstCatSlug = apiCategories.length > 0 ? apiCategories[0].slug : "";
+    setForm({ ...emptyForm, category: firstCatSlug });
     setShowModal(true);
   };
 
@@ -100,7 +110,8 @@ const AdminProducts = () => {
       description: product.description || "",
       price: String(product.price ?? ""),
       originalPrice: String(product.originalPrice ?? ""),
-      category: product.category || "golu",
+      category: product.category || "",
+      subCategory: product.subCategory || "",
       images: product.images || [],
       featured: product.featured || false,
       rating: String(product.rating ?? "0"),
@@ -151,6 +162,7 @@ const AdminProducts = () => {
         price: form.hasPrice ? form.price : null,
         originalPrice: form.hasPrice && form.originalPrice ? form.originalPrice : null,
         category: form.category,
+        subCategory: form.subCategory || null,
         images: form.images,
         featured: form.featured,
         rating: form.rating,
@@ -448,29 +460,64 @@ const AdminProducts = () => {
                   )}
                 </div>
 
-                {/* Category + Tags */}
+                {/* Category + Subcategory + Tags */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-cream/60 uppercase tracking-wider mb-1.5">Category *</label>
                     <select
                       value={form.category}
-                      onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+                      onChange={(e) => setForm((f) => ({ ...f, category: e.target.value, subCategory: "" }))}
                       className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-cream text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                     >
-                      <option value="golu" className="bg-[hsl(20,15%,14%)] text-cream">Golu Dolls</option>
-                      <option value="idols" className="bg-[hsl(20,15%,14%)] text-cream">Idols</option>
-                      <option value="decor" className="bg-[hsl(20,15%,14%)] text-cream">Spiritual Decor</option>
+                      {apiCategories.length === 0 ? (
+                        <>
+                          <option value="golu" className="bg-[hsl(20,15%,14%)] text-cream">Golu Dolls</option>
+                          <option value="idols" className="bg-[hsl(20,15%,14%)] text-cream">Idols</option>
+                          <option value="decor" className="bg-[hsl(20,15%,14%)] text-cream">Spiritual Decor</option>
+                        </>
+                      ) : (
+                        apiCategories.map((cat) => (
+                          <option key={cat.slug} value={cat.slug} className="bg-[hsl(20,15%,14%)] text-cream">
+                            {cat.name}
+                          </option>
+                        ))
+                      )}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-cream/60 uppercase tracking-wider mb-1.5">Tags</label>
-                    <input
-                      value={form.tags}
-                      onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))}
-                      className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-cream text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-cream/20"
-                      placeholder="bestseller, premium"
-                    />
+                    <label className="block text-xs font-medium text-cream/60 uppercase tracking-wider mb-1.5">Subcategory</label>
+                    {(() => {
+                      const selectedCat = apiCategories.find((c) => c.slug === form.category);
+                      const subs = selectedCat?.subCategories || [];
+                      return subs.length > 0 ? (
+                        <select
+                          value={form.subCategory}
+                          onChange={(e) => setForm((f) => ({ ...f, subCategory: e.target.value }))}
+                          className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-cream text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        >
+                          <option value="" className="bg-[hsl(20,15%,14%)] text-cream">None</option>
+                          {subs.map((sub: any) => (
+                            <option key={sub.slug} value={sub.slug} className="bg-[hsl(20,15%,14%)] text-cream">
+                              {sub.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <div className="w-full px-4 py-2.5 bg-white/[0.02] border border-white/5 rounded-xl text-cream/25 text-sm">
+                          No subcategories
+                        </div>
+                      );
+                    })()}
                   </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-cream/60 uppercase tracking-wider mb-1.5">Tags</label>
+                  <input
+                    value={form.tags}
+                    onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))}
+                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-cream text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-cream/20"
+                    placeholder="bestseller, premium"
+                  />
                 </div>
 
                 {/* Rating + Reviews */}

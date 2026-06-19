@@ -4,7 +4,8 @@ export interface Product {
   description: string;
   price?: number | null;
   originalPrice?: number;
-  category: "golu" | "idols" | "decor";
+  category: string;
+  subCategory?: string | null;
   images: string[];
   featured: boolean;
   rating: number;

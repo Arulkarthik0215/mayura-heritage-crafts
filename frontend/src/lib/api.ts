@@ -112,6 +112,38 @@ export async function deleteCategory(id: string) {
   return handleResponse<{ message: string }>(res);
 }
 
+/* ─── Subcategories ─── */
+export async function fetchSubCategories(parentSlug: string) {
+  const res = await fetch(`${API_BASE}/categories/${parentSlug}/subcategories`);
+  return handleResponse<{ subCategories: any[] }>(res);
+}
+
+export async function createSubCategory(parentSlug: string, data: { slug: string; name: string; description?: string }) {
+  const res = await fetch(`${API_BASE}/categories/${parentSlug}/subcategories`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(data),
+  });
+  return handleResponse<{ subCategory: any }>(res);
+}
+
+export async function updateSubCategory(id: string, data: { slug?: string; name?: string; description?: string }) {
+  const res = await fetch(`${API_BASE}/categories/subcategories/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(data),
+  });
+  return handleResponse<{ subCategory: any }>(res);
+}
+
+export async function deleteSubCategory(id: string) {
+  const res = await fetch(`${API_BASE}/categories/subcategories/${id}`, {
+    method: "DELETE",
+    headers: { ...authHeaders() },
+  });
+  return handleResponse<{ message: string }>(res);
+}
+
 /* ─── Testimonials ─── */
 export async function fetchTestimonials() {
   const res = await fetch(`${API_BASE}/testimonials`);

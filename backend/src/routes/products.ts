@@ -7,25 +7,62 @@ const router = Router();
 /**
  * GET /api/products
  * Public — returns all products. Supports optional query params:
- *   ?category=golu&featured=true&search=ganesha
+ *   ?category=golu&subCategory=brass-lamps&featured=true&search=ganesha
+ *   &minPrice=100&maxPrice=5000&inStock=true&priceType=priced|request
+ *   &minRating=4&tags=bestseller,premium
  */
 router.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { category, featured, search } = req.query;
+    const { category, subCategory, featured, search, minPrice, maxPrice, inStock, priceType, minRating, tags } = req.query;
 
     const where: any = {};
 
     if (category) {
       where.category = category as string;
     }
+    if (subCategory) {
+      where.subCategory = subCategory as string;
+    }
     if (featured === 'true') {
       where.featured = true;
+    }
+    if (inStock === 'true') {
+      where.inStock = true;
     }
     if (search) {
       where.OR = [
         { name: { contains: search as string, mode: 'insensitive' } },
         { description: { contains: search as string, mode: 'insensitive' } },
       ];
+    }
+
+    // Price type filter: "priced" = has a price, "request" = price is null
+    if (priceType === 'priced') {
+      where.price = { not: null };
+    } else if (priceType === 'request') {
+      where.price = null;
+    }
+
+    // Price range (only applies to products that have a price)
+    if (minPrice || maxPrice) {
+      where.price = {
+        ...(where.price || {}),
+        ...(minPrice ? { gte: parseFloat(minPrice as string) } : {}),
+        ...(maxPrice ? { lte: parseFloat(maxPrice as string) } : {}),
+      };
+    }
+
+    // Minimum rating filter
+    if (minRating) {
+      where.rating = { gte: parseFloat(minRating as string) };
+    }
+
+    // Tags filter (comma-separated, match any)
+    if (tags) {
+      const tagList = (tags as string).split(',').map((t) => t.trim()).filter(Boolean);
+      if (tagList.length > 0) {
+        where.tags = { hasSome: tagList };
+      }
     }
 
     const products = await prisma.product.findMany({
@@ -68,7 +105,7 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
  */
 router.post('/', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { name, description, price, originalPrice, category, images, featured, rating, reviews, inStock, tags, hasCustomShipping, shippingChargeIndia, shippingChargeForeign } = req.body;
+    const { name, description, price, originalPrice, category, subCategory, images, featured, rating, reviews, inStock, tags, hasCustomShipping, shippingChargeIndia, shippingChargeForeign } = req.body;
 
     if (!name || !description || !category) {
       res.status(400).json({ error: 'Name, description, and category are required' });
@@ -82,6 +119,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response): Promis
         price: price !== undefined && price !== null && price !== '' ? parseFloat(price) : null,
         originalPrice: originalPrice ? parseFloat(originalPrice) : null,
         category,
+        subCategory: subCategory || null,
         images: images || [],
         featured: featured || false,
         rating: rating ? parseFloat(rating) : 0,
@@ -114,7 +152,7 @@ router.put('/:id', authMiddleware, async (req: AuthRequest, res: Response): Prom
       return;
     }
 
-    const { name, description, price, originalPrice, category, images, featured, rating, reviews, inStock, tags, hasCustomShipping, shippingChargeIndia, shippingChargeForeign } = req.body;
+    const { name, description, price, originalPrice, category, subCategory, images, featured, rating, reviews, inStock, tags, hasCustomShipping, shippingChargeIndia, shippingChargeForeign } = req.body;
 
     const product = await prisma.product.update({
       where: { id: req.params.id as string },
@@ -124,6 +162,7 @@ router.put('/:id', authMiddleware, async (req: AuthRequest, res: Response): Prom
         ...(price !== undefined && { price: price !== null && price !== '' ? parseFloat(price) : null }),
         ...(originalPrice !== undefined && { originalPrice: originalPrice ? parseFloat(originalPrice) : null }),
         ...(category !== undefined && { category }),
+        ...(subCategory !== undefined && { subCategory: subCategory || null }),
         ...(images !== undefined && { images }),
         ...(featured !== undefined && { featured }),
         ...(rating !== undefined && { rating: parseFloat(rating) }),
