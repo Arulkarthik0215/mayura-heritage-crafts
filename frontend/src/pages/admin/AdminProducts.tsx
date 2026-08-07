@@ -14,6 +14,7 @@ import {
   ArrowDown,
   Save,
   Filter,
+  GripVertical,
 } from "lucide-react";
 import {
   fetchProducts,
@@ -80,6 +81,8 @@ const AdminProducts = () => {
   const [hasOrderChanges, setHasOrderChanges] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -184,6 +187,26 @@ const AdminProducts = () => {
       const temp = next[idx1];
       next[idx1] = next[idx2];
       next[idx2] = temp;
+
+      return next.map((p, i) => ({ ...p, displayOrder: i + 1 }));
+    });
+    setHasOrderChanges(true);
+  };
+
+  // Drag & drop reordering handler
+  const handleDrop = (fromIdx: number, toIdx: number) => {
+    if (fromIdx === toIdx) return;
+    const itemToMove = filtered[fromIdx];
+    const targetItem = filtered[toIdx];
+
+    setProducts((prev) => {
+      const idx1 = prev.findIndex((p) => p.id === itemToMove.id);
+      const idx2 = prev.findIndex((p) => p.id === targetItem.id);
+      if (idx1 === -1 || idx2 === -1) return prev;
+
+      const next = [...prev];
+      const [removed] = next.splice(idx1, 1);
+      next.splice(idx2, 0, removed);
 
       return next.map((p, i) => ({ ...p, displayOrder: i + 1 }));
     });
@@ -395,7 +418,7 @@ const AdminProducts = () => {
       ) : (
         <div className="bg-[hsl(20,15%,14%)] border border-white/5 rounded-2xl overflow-hidden">
           {/* Desktop table head */}
-          <div className="hidden md:grid grid-cols-[120px_auto_1fr_100px_100px_80px_100px] gap-4 px-5 py-3 border-b border-white/5 text-xs font-medium text-cream/40 uppercase tracking-wider items-center">
+          <div className="hidden md:grid grid-cols-[140px_auto_1fr_100px_100px_80px_100px] gap-4 px-5 py-3 border-b border-white/5 text-xs font-medium text-cream/40 uppercase tracking-wider items-center">
             <span>Arrange</span>
             <span className="w-12">Image</span>
             <span>Name</span>
@@ -406,9 +429,41 @@ const AdminProducts = () => {
           </div>
           <div className="divide-y divide-white/5">
             {filtered.map((product, index) => (
-              <div key={product.id} className="flex flex-col md:grid md:grid-cols-[120px_auto_1fr_100px_100px_80px_100px] gap-2 md:gap-4 md:items-center px-5 py-3.5 hover:bg-white/[0.02] transition-colors">
-                {/* Reorder Buttons & Position Badge */}
+              <div
+                key={product.id}
+                draggable
+                onDragStart={(e) => {
+                  setDraggedIndex(index);
+                  e.dataTransfer.effectAllowed = "move";
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragOverIndex(index);
+                }}
+                onDragLeave={() => setDragOverIndex(null)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (draggedIndex !== null) {
+                    handleDrop(draggedIndex, index);
+                  }
+                  setDraggedIndex(null);
+                  setDragOverIndex(null);
+                }}
+                className={`flex flex-col md:grid md:grid-cols-[140px_auto_1fr_100px_100px_80px_100px] gap-2 md:gap-4 md:items-center px-5 py-3.5 transition-all ${
+                  draggedIndex === index ? "opacity-30 bg-primary/10" : "hover:bg-white/[0.02]"
+                } ${
+                  dragOverIndex === index && draggedIndex !== index ? "border-t-2 border-primary bg-primary/10" : ""
+                }`}
+              >
+                {/* Drag handle & Reorder Buttons & Position Badge */}
                 <div className="flex items-center gap-1.5 shrink-0">
+                  <div
+                    className="p-1 text-cream/30 hover:text-cream rounded cursor-grab active:cursor-grabbing transition-colors"
+                    title="Click and drag to reorder"
+                  >
+                    <GripVertical className="w-4 h-4" />
+                  </div>
+
                   <div className="flex flex-col gap-0.5">
                     <button
                       type="button"
