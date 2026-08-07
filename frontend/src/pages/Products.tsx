@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Filter, SlidersHorizontal, X, Star, ChevronDown, ChevronUp, RotateCcw } from "lucide-react";
+import { Filter, SlidersHorizontal, X, Star, ChevronDown, ChevronUp, RotateCcw, Check } from "lucide-react";
 import { categories as fallbackCategories } from "@/data/products";
 import type { Product } from "@/data/products";
 import { fetchProducts, fetchCategories } from "@/lib/api";
@@ -13,6 +13,14 @@ import { Slider } from "@/components/ui/slider";
 type SortOption = "featured" | "rating" | "price-asc" | "price-desc" | "newest";
 
 const RATING_OPTIONS = [4, 3, 2, 1];
+
+const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: "featured", label: "Featured" },
+  { value: "newest", label: "Newest" },
+  { value: "price-asc", label: "Price: Low to High" },
+  { value: "price-desc", label: "Price: High to Low" },
+  { value: "rating", label: "Top Rated" },
+];
 
 const FilterSection = ({
   id,
@@ -61,6 +69,7 @@ const ProductsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [sortBy, setSortBy] = useState<SortOption>((searchParams.get("sort") as SortOption) || "featured");
   const [showFilters, setShowFilters] = useState(false);
+  const [isSortOpen, setIsSortOpen] = useState(false);
 
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState(fallbackCategories);
@@ -155,12 +164,18 @@ const ProductsPage = () => {
 
     // Category
     if (activeCategory !== "all") {
-      filtered = filtered.filter((p) => p.category === activeCategory);
+      filtered = filtered.filter(
+        (p) =>
+          p.category?.toLowerCase() === activeCategory.toLowerCase() ||
+          p.category?.toLowerCase().replace(/\s+/g, "-") === activeCategory.toLowerCase()
+      );
     }
 
     // Subcategory
     if (activeSubCategory) {
-      filtered = filtered.filter((p) => p.subCategory === activeSubCategory);
+      filtered = filtered.filter(
+        (p) => p.subCategory?.toLowerCase() === activeSubCategory.toLowerCase()
+      );
     }
 
     // Price type
@@ -226,6 +241,18 @@ const ProductsPage = () => {
     setSearchParams(next);
   }, [searchParams, setSearchParams]);
 
+  const updateParams = useCallback((updates: Record<string, string>) => {
+    const next = new URLSearchParams(searchParams);
+    Object.entries(updates).forEach(([key, value]) => {
+      if (!value || value === "all" || value === "false") {
+        next.delete(key);
+      } else {
+        next.set(key, value);
+      }
+    });
+    setSearchParams(next);
+  }, [searchParams, setSearchParams]);
+
   const toggleTag = useCallback((tag: string) => {
     const current = activeTags ? activeTags.split(",") : [];
     const next = current.includes(tag) ? current.filter((t) => t !== tag) : [...current, tag];
@@ -269,8 +296,7 @@ const ProductsPage = () => {
             <button
               key={cat.id}
               onClick={() => {
-                updateParam("category", cat.id);
-                updateParam("subCategory", "");
+                updateParams({ category: cat.id, subCategory: "" });
               }}
               className={`w-full text-left text-sm px-3 py-2 rounded-lg transition-all ${
                 activeCategory === cat.id
@@ -518,19 +544,52 @@ const ProductsPage = () => {
                 {filteredProducts.length} product{filteredProducts.length !== 1 ? "s" : ""}
               </p>
             )}
-            <div className="flex items-center gap-2">
-              <SlidersHorizontal className="w-4 h-4 text-muted-foreground" />
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="text-sm bg-secondary text-secondary-foreground border-0 rounded-lg px-3 py-2 focus:ring-2 focus:ring-ring"
+            
+            {/* Custom Sort Dropdown */}
+            <div className="relative z-30">
+              <button
+                type="button"
+                onClick={() => setIsSortOpen(!isSortOpen)}
+                className="flex items-center gap-2 text-sm bg-secondary/80 hover:bg-secondary border border-border/60 hover:border-primary/40 text-foreground px-3.5 py-2 rounded-xl transition-all font-medium"
               >
-                <option value="featured">Featured</option>
-                <option value="newest">Newest</option>
-                <option value="price-asc">Price: Low to High</option>
-                <option value="price-desc">Price: High to Low</option>
-                <option value="rating">Top Rated</option>
-              </select>
+                <SlidersHorizontal className="w-4 h-4 text-primary" />
+                <span>{SORT_OPTIONS.find((o) => o.value === sortBy)?.label || "Sort By"}</span>
+                <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${isSortOpen ? "rotate-180 text-primary" : ""}`} />
+              </button>
+
+              <AnimatePresence>
+                {isSortOpen && (
+                  <>
+                    <div className="fixed inset-0 z-20" onClick={() => setIsSortOpen(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 mt-2 w-48 bg-card border border-border/80 rounded-xl shadow-xl z-30 overflow-hidden py-1.5"
+                    >
+                      {SORT_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => {
+                            setSortBy(opt.value);
+                            setIsSortOpen(false);
+                          }}
+                          className={`w-full flex items-center justify-between px-3.5 py-2 text-sm text-left transition-colors ${
+                            sortBy === opt.value
+                              ? "bg-primary/15 text-primary font-semibold"
+                              : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                          }`}
+                        >
+                          <span>{opt.label}</span>
+                          {sortBy === opt.value && <Check className="w-4 h-4 text-primary" />}
+                        </button>
+                      ))}
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </div>
@@ -539,7 +598,7 @@ const ProductsPage = () => {
         <div className="flex gap-8">
           {/* Desktop sidebar filter */}
           <aside className="hidden lg:block w-64 shrink-0">
-            <div className="sticky top-24">
+            <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto pr-2 scrollbar-none">
               <div className="flex items-center justify-between mb-5">
                 <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">Filters</h2>
                 {activeFilterCount > 0 && (

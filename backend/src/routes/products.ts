@@ -67,7 +67,10 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
 
     const products = await prisma.product.findMany({
       where,
-      orderBy: { createdAt: 'desc' },
+      orderBy: [
+        { displayOrder: 'asc' },
+        { createdAt: 'desc' },
+      ],
     });
 
     res.json({ products });
@@ -105,7 +108,7 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
  */
 router.post('/', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { name, description, price, originalPrice, category, subCategory, images, featured, rating, reviews, inStock, tags, hasCustomShipping, shippingChargeIndia, shippingChargeForeign } = req.body;
+    const { name, description, price, originalPrice, category, subCategory, images, featured, rating, reviews, inStock, tags, hasCustomShipping, shippingChargeIndia, shippingChargeForeign, displayOrder } = req.body;
 
     if (!name || !description || !category) {
       res.status(400).json({ error: 'Name, description, and category are required' });
@@ -129,12 +132,42 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response): Promis
         hasCustomShipping: hasCustomShipping || false,
         shippingChargeIndia: shippingChargeIndia !== undefined && shippingChargeIndia !== null && shippingChargeIndia !== '' ? parseFloat(shippingChargeIndia) : null,
         shippingChargeForeign: shippingChargeForeign !== undefined && shippingChargeForeign !== null && shippingChargeForeign !== '' ? parseFloat(shippingChargeForeign) : null,
+        displayOrder: displayOrder !== undefined ? parseInt(displayOrder) : 0,
       },
     });
 
     res.status(201).json({ product });
   } catch (error) {
     console.error('Create product error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * PUT /api/products/reorder
+ * Protected — batch updates displayOrder for multiple products.
+ */
+router.put('/reorder', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { items } = req.body;
+
+    if (!Array.isArray(items)) {
+      res.status(400).json({ error: 'items must be an array of { id, displayOrder }' });
+      return;
+    }
+
+    const updates = items.map((item) =>
+      prisma.product.update({
+        where: { id: item.id },
+        data: { displayOrder: parseInt(String(item.displayOrder)) || 0 },
+      })
+    );
+
+    await prisma.$transaction(updates);
+
+    res.json({ message: 'Products reordered successfully' });
+  } catch (error) {
+    console.error('Reorder products error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -152,7 +185,7 @@ router.put('/:id', authMiddleware, async (req: AuthRequest, res: Response): Prom
       return;
     }
 
-    const { name, description, price, originalPrice, category, subCategory, images, featured, rating, reviews, inStock, tags, hasCustomShipping, shippingChargeIndia, shippingChargeForeign } = req.body;
+    const { name, description, price, originalPrice, category, subCategory, images, featured, rating, reviews, inStock, tags, hasCustomShipping, shippingChargeIndia, shippingChargeForeign, displayOrder } = req.body;
 
     const product = await prisma.product.update({
       where: { id: req.params.id as string },
@@ -172,6 +205,7 @@ router.put('/:id', authMiddleware, async (req: AuthRequest, res: Response): Prom
         ...(hasCustomShipping !== undefined && { hasCustomShipping }),
         ...(shippingChargeIndia !== undefined && { shippingChargeIndia: shippingChargeIndia !== null && shippingChargeIndia !== '' ? parseFloat(shippingChargeIndia) : null }),
         ...(shippingChargeForeign !== undefined && { shippingChargeForeign: shippingChargeForeign !== null && shippingChargeForeign !== '' ? parseFloat(shippingChargeForeign) : null }),
+        ...(displayOrder !== undefined && { displayOrder: parseInt(displayOrder) }),
       },
     });
 

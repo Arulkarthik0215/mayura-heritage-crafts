@@ -6,14 +6,14 @@ import {
   Pencil,
   Trash2,
   X,
-  Upload,
-  Star,
   Package,
   ImagePlus,
   Check,
   AlertCircle,
-  Truck,
-  Tag,
+  ArrowUp,
+  ArrowDown,
+  Save,
+  Filter,
 } from "lucide-react";
 import {
   fetchProducts,
@@ -21,6 +21,7 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  reorderProducts,
   uploadImage,
 } from "@/lib/api";
 import { toast } from "sonner";
@@ -42,6 +43,7 @@ interface ProductForm {
   hasCustomShipping: boolean;
   shippingChargeIndia: string;
   shippingChargeForeign: string;
+  displayOrder: string;
 }
 
 const emptyForm: ProductForm = {
@@ -61,45 +63,64 @@ const emptyForm: ProductForm = {
   hasCustomShipping: false,
   shippingChargeIndia: "",
   shippingChargeForeign: "",
+  displayOrder: "0",
 };
 
 const AdminProducts = () => {
   const [products, setProducts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
   const [form, setForm] = useState<ProductForm>(emptyForm);
   const [submitting, setSubmitting] = useState(false);
+  const [savingOrder, setSavingOrder] = useState(false);
+  const [hasOrderChanges, setHasOrderChanges] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [apiCategories, setApiCategories] = useState<any[]>([]);
 
   const load = useCallback(() => {
     setLoading(true);
     Promise.all([
       fetchProducts().catch(() => ({ products: [] })),
       fetchCategories().catch(() => ({ categories: [] })),
-    ]).then(([prodRes, catRes]) => {
-      setProducts(prodRes.products || []);
-      setApiCategories(catRes.categories || []);
-    })
-    .catch((e) => toast.error(e.message))
-    .finally(() => setLoading(false));
+    ])
+      .then(([prodRes, catRes]) => {
+        setProducts(prodRes.products || []);
+        const cats = catRes.categories || [];
+        setCategories(cats);
+      })
+      .catch((e) => toast.error(e.message))
+      .finally(() => {
+        setLoading(false);
+        setHasOrderChanges(false);
+      });
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
-  const filtered = products.filter(
-    (p) =>
+  // Filter products by selected category tab & search query
+  const filtered = products.filter((p) => {
+    const matchesCat =
+      selectedCategory === "all" || p.category.toLowerCase() === selectedCategory.toLowerCase();
+    const matchesSearch =
       p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.category.toLowerCase().includes(search.toLowerCase())
-  );
+      p.category.toLowerCase().includes(search.toLowerCase());
+    return matchesCat && matchesSearch;
+  });
 
   const openCreate = () => {
     setEditing(null);
-    const firstCatSlug = apiCategories.length > 0 ? apiCategories[0].slug : "";
-    setForm({ ...emptyForm, category: firstCatSlug });
+    const firstCatSlug = categories.length > 0 ? categories[0].slug : "golu";
+    setForm({
+      ...emptyForm,
+      category: selectedCategory !== "all" ? selectedCategory : firstCatSlug,
+      displayOrder: String(products.length + 1),
+    });
     setShowModal(true);
   };
 
@@ -122,8 +143,70 @@ const AdminProducts = () => {
       hasCustomShipping: product.hasCustomShipping || false,
       shippingChargeIndia: String(product.shippingChargeIndia ?? ""),
       shippingChargeForeign: String(product.shippingChargeForeign ?? ""),
+      displayOrder: String(product.displayOrder ?? 0),
     });
     setShowModal(true);
+  };
+
+  // Move product up in current view
+  const moveUp = (index: number) => {
+    if (index <= 0) return;
+    const itemToMove = filtered[index];
+    const targetItem = filtered[index - 1];
+
+    setProducts((prev) => {
+      const idx1 = prev.findIndex((p) => p.id === itemToMove.id);
+      const idx2 = prev.findIndex((p) => p.id === targetItem.id);
+      if (idx1 === -1 || idx2 === -1) return prev;
+
+      const next = [...prev];
+      const temp = next[idx1];
+      next[idx1] = next[idx2];
+      next[idx2] = temp;
+
+      return next.map((p, i) => ({ ...p, displayOrder: i + 1 }));
+    });
+    setHasOrderChanges(true);
+  };
+
+  // Move product down in current view
+  const moveDown = (index: number) => {
+    if (index >= filtered.length - 1) return;
+    const itemToMove = filtered[index];
+    const targetItem = filtered[index + 1];
+
+    setProducts((prev) => {
+      const idx1 = prev.findIndex((p) => p.id === itemToMove.id);
+      const idx2 = prev.findIndex((p) => p.id === targetItem.id);
+      if (idx1 === -1 || idx2 === -1) return prev;
+
+      const next = [...prev];
+      const temp = next[idx1];
+      next[idx1] = next[idx2];
+      next[idx2] = temp;
+
+      return next.map((p, i) => ({ ...p, displayOrder: i + 1 }));
+    });
+    setHasOrderChanges(true);
+  };
+
+  // Save updated product display order to database
+  const saveOrder = async () => {
+    setSavingOrder(true);
+    try {
+      const itemsToUpdate = products.map((p, idx) => ({
+        id: p.id,
+        displayOrder: idx + 1,
+      }));
+      await reorderProducts(itemsToUpdate);
+      toast.success("Product arrangement saved!");
+      setHasOrderChanges(false);
+      load();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save product order");
+    } finally {
+      setSavingOrder(false);
+    }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -168,6 +251,7 @@ const AdminProducts = () => {
         rating: form.rating,
         reviews: form.reviews,
         inStock: form.inStock,
+        displayOrder: form.displayOrder ? parseInt(form.displayOrder) : 0,
         tags: form.tags
           .split(",")
           .map((t) => t.trim())
@@ -204,32 +288,99 @@ const AdminProducts = () => {
     }
   };
 
+  // Selected category subcategories for modal dropdown
+  const selectedCatObj = categories.find((c) => c.slug === form.category);
+  const modalSubCategories = selectedCatObj?.subCategories || [];
+
   return (
     <div className="max-w-6xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-serif font-bold text-cream">Products</h1>
-          <p className="text-cream/40 text-sm mt-1">{products.length} product{products.length !== 1 ? "s" : ""} total</p>
+          <h1 className="text-2xl font-serif font-bold text-cream">Products & Arrangement</h1>
+          <p className="text-cream/40 text-sm mt-1">
+            {products.length} product{products.length !== 1 ? "s" : ""} total — filter by category and use ▲/▼ buttons to reorder products.
+          </p>
         </div>
-        <button
-          onClick={openCreate}
-          className="inline-flex items-center gap-2 bg-gradient-to-r from-primary to-terracotta-dark text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:shadow-lg hover:shadow-primary/25 transition-all"
-        >
-          <Plus className="w-4 h-4" /> Add Product
-        </button>
+        <div className="flex items-center gap-3">
+          {hasOrderChanges && (
+            <button
+              onClick={saveOrder}
+              disabled={savingOrder}
+              className="inline-flex items-center gap-2 bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-600/25 transition-all animate-pulse"
+            >
+              {savingOrder ? (
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
+              Save Order Changes
+            </button>
+          )}
+          <button
+            onClick={openCreate}
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-primary to-terracotta-dark text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:shadow-lg hover:shadow-primary/25 transition-all"
+          >
+            <Plus className="w-4 h-4" /> Add Product
+          </button>
+        </div>
       </div>
 
-      {/* Search */}
-      <div className="relative mb-6">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cream/30" />
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search products…"
-          className="w-full pl-10 pr-4 py-3 bg-[hsl(20,15%,14%)] border border-white/5 rounded-xl text-cream placeholder:text-cream/25 focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
-        />
+      {/* Category View Tabs & Search */}
+      <div className="space-y-4 mb-6">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          <span className="text-xs font-semibold uppercase tracking-wider text-cream/40 flex items-center gap-1 shrink-0 pr-2">
+            <Filter className="w-3.5 h-3.5" /> Category View:
+          </span>
+          <button
+            onClick={() => setSelectedCategory("all")}
+            className={`text-xs px-4 py-2 rounded-xl transition-all shrink-0 font-medium ${
+              selectedCategory === "all"
+                ? "bg-primary text-white shadow-md shadow-primary/20"
+                : "bg-[hsl(20,15%,14%)] text-cream/60 hover:text-cream hover:bg-white/5 border border-white/5"
+            }`}
+          >
+            All Categories
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setSelectedCategory(cat.slug)}
+              className={`text-xs px-4 py-2 rounded-xl transition-all shrink-0 font-medium ${
+                selectedCategory === cat.slug
+                  ? "bg-primary text-white shadow-md shadow-primary/20"
+                  : "bg-[hsl(20,15%,14%)] text-cream/60 hover:text-cream hover:bg-white/5 border border-white/5"
+              }`}
+            >
+              {cat.name}
+            </button>
+          ))}
+        </div>
+
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cream/30" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search products in view…"
+            className="w-full pl-10 pr-4 py-3 bg-[hsl(20,15%,14%)] border border-white/5 rounded-xl text-cream placeholder:text-cream/25 focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
+          />
+        </div>
       </div>
+
+      {/* Save Prompt Banner */}
+      {hasOrderChanges && (
+        <div className="mb-4 p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center justify-between text-amber-300 text-sm">
+          <span>You have unsaved product arrangement changes. Click <strong>"Save Order Changes"</strong> to publish to your storefront.</span>
+          <button
+            onClick={saveOrder}
+            disabled={savingOrder}
+            className="px-3 py-1.5 bg-amber-500 text-black text-xs font-semibold rounded-lg hover:bg-amber-400 transition-colors"
+          >
+            Save Now
+          </button>
+        </div>
+      )}
 
       {/* Table */}
       {loading ? (
@@ -239,12 +390,13 @@ const AdminProducts = () => {
       ) : filtered.length === 0 ? (
         <div className="bg-[hsl(20,15%,14%)] border border-white/5 rounded-2xl p-12 text-center">
           <Package className="w-12 h-12 mx-auto text-cream/15 mb-3" />
-          <p className="text-cream/40 text-sm">No products found</p>
+          <p className="text-cream/40 text-sm">No products found in this category view</p>
         </div>
       ) : (
         <div className="bg-[hsl(20,15%,14%)] border border-white/5 rounded-2xl overflow-hidden">
           {/* Desktop table head */}
-          <div className="hidden md:grid grid-cols-[auto_1fr_100px_100px_80px_100px] gap-4 px-5 py-3 border-b border-white/5 text-xs font-medium text-cream/40 uppercase tracking-wider">
+          <div className="hidden md:grid grid-cols-[120px_auto_1fr_100px_100px_80px_100px] gap-4 px-5 py-3 border-b border-white/5 text-xs font-medium text-cream/40 uppercase tracking-wider items-center">
+            <span>Arrange</span>
             <span className="w-12">Image</span>
             <span>Name</span>
             <span>Category</span>
@@ -253,8 +405,36 @@ const AdminProducts = () => {
             <span className="text-right">Actions</span>
           </div>
           <div className="divide-y divide-white/5">
-            {filtered.map((product) => (
-              <div key={product.id} className="flex flex-col md:grid md:grid-cols-[auto_1fr_100px_100px_80px_100px] gap-2 md:gap-4 md:items-center px-5 py-4 hover:bg-white/[0.02] transition-colors">
+            {filtered.map((product, index) => (
+              <div key={product.id} className="flex flex-col md:grid md:grid-cols-[120px_auto_1fr_100px_100px_80px_100px] gap-2 md:gap-4 md:items-center px-5 py-3.5 hover:bg-white/[0.02] transition-colors">
+                {/* Reorder Buttons & Position Badge */}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <div className="flex flex-col gap-0.5">
+                    <button
+                      type="button"
+                      onClick={() => moveUp(index)}
+                      disabled={index === 0}
+                      className="p-1 text-cream/40 hover:text-primary hover:bg-white/10 rounded transition-colors disabled:opacity-20 disabled:hover:text-cream/40"
+                      title="Move Up"
+                    >
+                      <ArrowUp className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveDown(index)}
+                      disabled={index === filtered.length - 1}
+                      className="p-1 text-cream/40 hover:text-primary hover:bg-white/10 rounded transition-colors disabled:opacity-20 disabled:hover:text-cream/40"
+                      title="Move Down"
+                    >
+                      <ArrowDown className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <span className="text-xs font-mono font-bold text-amber-400/90 bg-amber-400/10 px-2 py-1 rounded-md border border-amber-400/20">
+                    #{index + 1}
+                  </span>
+                </div>
+
                 {/* Image */}
                 <div className="w-12 h-12 rounded-xl bg-white/5 overflow-hidden shrink-0">
                   {product.images?.[0] ? (
@@ -265,15 +445,25 @@ const AdminProducts = () => {
                     </div>
                   )}
                 </div>
+
                 {/* Name + desc */}
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-cream truncate">{product.name}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-cream truncate">{product.name}</p>
+                    {product.featured && (
+                      <span className="text-[10px] bg-gold/20 text-gold px-2 py-0.5 rounded-full font-semibold">
+                        Featured
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-cream/30 truncate">{product.description}</p>
                 </div>
+
                 {/* Category */}
                 <span className="text-xs text-cream/50 capitalize bg-white/5 px-2.5 py-1 rounded-full w-fit">
                   {product.category}
                 </span>
+
                 {/* Price */}
                 <span className="text-sm font-semibold text-cream">
                   {product.price !== null && product.price !== undefined
@@ -281,11 +471,13 @@ const AdminProducts = () => {
                     : <span className="text-xs text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full">No Price</span>
                   }
                 </span>
+
                 {/* Status */}
                 <span className={`flex items-center gap-1 text-xs font-medium ${product.inStock ? "text-emerald-400" : "text-red-400"}`}>
                   <span className={`w-1.5 h-1.5 rounded-full ${product.inStock ? "bg-emerald-400" : "bg-red-400"}`} />
                   {product.inStock ? "Active" : "Out"}
                 </span>
+
                 {/* Actions */}
                 <div className="flex items-center justify-end gap-1">
                   <button
@@ -406,62 +598,54 @@ const AdminProducts = () => {
                   />
                 </div>
 
-                {/* Price toggle + fields */}
-                <div className="space-y-3">
+                {/* Price Toggle */}
+                <div className="flex items-center gap-3">
                   <label className="flex items-center gap-3 cursor-pointer">
                     <div
                       onClick={() => setForm((f) => ({ ...f, hasPrice: !f.hasPrice }))}
                       className={`w-10 h-6 rounded-full transition-colors flex items-center px-0.5 ${
-                        form.hasPrice ? "bg-amber-500" : "bg-white/10"
+                        form.hasPrice ? "bg-primary" : "bg-white/10"
                       }`}
                     >
-                      <div
-                        className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${
-                          form.hasPrice ? "translate-x-4" : "translate-x-0"
-                        }`}
-                      />
+                      <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${form.hasPrice ? "translate-x-4" : "translate-x-0"}`} />
                     </div>
-                    <span className="text-sm text-cream/70 flex items-center gap-1.5">
-                      <Tag className="w-3.5 h-3.5" /> Set Price
-                    </span>
-                    {!form.hasPrice && (
-                      <span className="text-[10px] text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full">Customers will "Request Price"</span>
-                    )}
+                    <span className="text-sm text-cream/70 font-medium">Set Specific Price</span>
                   </label>
-
-                  {form.hasPrice && (
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-medium text-cream/60 uppercase tracking-wider mb-1.5">Price (₹) *</label>
-                        <input
-                          required
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={form.price}
-                          onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
-                          className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-cream text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-cream/20"
-                          placeholder="e.g. 4999"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-cream/60 uppercase tracking-wider mb-1.5">Original Price</label>
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={form.originalPrice}
-                          onChange={(e) => setForm((f) => ({ ...f, originalPrice: e.target.value }))}
-                          className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-cream text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-cream/20"
-                          placeholder="e.g. 5999"
-                        />
-                      </div>
-                    </div>
-                  )}
                 </div>
 
-                {/* Category + Subcategory + Tags */}
-                <div className="grid grid-cols-2 gap-4">
+                {/* Price row */}
+                {form.hasPrice && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-cream/60 uppercase tracking-wider mb-1.5">Price (₹) *</label>
+                      <input
+                        required={form.hasPrice}
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={form.price}
+                        onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
+                        className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-cream text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-cream/20"
+                        placeholder="e.g. 4999"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-cream/60 uppercase tracking-wider mb-1.5">Original Price</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={form.originalPrice}
+                        onChange={(e) => setForm((f) => ({ ...f, originalPrice: e.target.value }))}
+                        className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-cream text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-cream/20"
+                        placeholder="e.g. 5999"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Category, Subcategory & Display Order */}
+                <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-cream/60 uppercase tracking-wider mb-1.5">Category *</label>
                     <select
@@ -469,47 +653,85 @@ const AdminProducts = () => {
                       onChange={(e) => setForm((f) => ({ ...f, category: e.target.value, subCategory: "" }))}
                       className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-cream text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                     >
-                      {apiCategories.length === 0 ? (
-                        <>
-                          <option value="golu" className="bg-[hsl(20,15%,14%)] text-cream">Golu Dolls</option>
-                          <option value="idols" className="bg-[hsl(20,15%,14%)] text-cream">Idols</option>
-                          <option value="decor" className="bg-[hsl(20,15%,14%)] text-cream">Spiritual Decor</option>
-                        </>
-                      ) : (
-                        apiCategories.map((cat) => (
-                          <option key={cat.slug} value={cat.slug} className="bg-[hsl(20,15%,14%)] text-cream">
-                            {cat.name}
-                          </option>
-                        ))
-                      )}
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.slug} className="bg-[hsl(20,15%,14%)] text-cream">
+                          {c.name}
+                        </option>
+                      ))}
                     </select>
                   </div>
+
                   <div>
                     <label className="block text-xs font-medium text-cream/60 uppercase tracking-wider mb-1.5">Subcategory</label>
-                    {(() => {
-                      const selectedCat = apiCategories.find((c) => c.slug === form.category);
-                      const subs = selectedCat?.subCategories || [];
-                      return subs.length > 0 ? (
-                        <select
-                          value={form.subCategory}
-                          onChange={(e) => setForm((f) => ({ ...f, subCategory: e.target.value }))}
-                          className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-cream text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-                        >
-                          <option value="" className="bg-[hsl(20,15%,14%)] text-cream">None</option>
-                          {subs.map((sub: any) => (
-                            <option key={sub.slug} value={sub.slug} className="bg-[hsl(20,15%,14%)] text-cream">
-                              {sub.name}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <div className="w-full px-4 py-2.5 bg-white/[0.02] border border-white/5 rounded-xl text-cream/25 text-sm">
-                          No subcategories
-                        </div>
-                      );
-                    })()}
+                    <select
+                      value={form.subCategory}
+                      onChange={(e) => setForm((f) => ({ ...f, subCategory: e.target.value }))}
+                      className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-cream text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    >
+                      <option value="" className="bg-[hsl(20,15%,14%)] text-cream">None</option>
+                      {modalSubCategories.map((sc: any) => (
+                        <option key={sc.slug} value={sc.slug} className="bg-[hsl(20,15%,14%)] text-cream">
+                          {sc.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-cream/60 uppercase tracking-wider mb-1.5">Display Rank #</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={form.displayOrder}
+                      onChange={(e) => setForm((f) => ({ ...f, displayOrder: e.target.value }))}
+                      className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-cream text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
                   </div>
                 </div>
+
+                {/* Custom Shipping */}
+                <div className="space-y-3 p-4 bg-white/5 rounded-xl border border-white/5">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <div
+                      onClick={() => setForm((f) => ({ ...f, hasCustomShipping: !f.hasCustomShipping }))}
+                      className={`w-10 h-6 rounded-full transition-colors flex items-center px-0.5 ${
+                        form.hasCustomShipping ? "bg-primary" : "bg-white/10"
+                      }`}
+                    >
+                      <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${form.hasCustomShipping ? "translate-x-4" : "translate-x-0"}`} />
+                    </div>
+                    <span className="text-sm text-cream/70 font-medium">Custom Shipping Charge</span>
+                  </label>
+
+                  {form.hasCustomShipping && (
+                    <div className="grid grid-cols-2 gap-4 pt-2">
+                      <div>
+                        <label className="block text-xs font-medium text-cream/60 uppercase tracking-wider mb-1.5">Shipping in India (₹)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={form.shippingChargeIndia}
+                          onChange={(e) => setForm((f) => ({ ...f, shippingChargeIndia: e.target.value }))}
+                          className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-cream text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                          placeholder="e.g. 150"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-cream/60 uppercase tracking-wider mb-1.5">Foreign Shipping (₹)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={form.shippingChargeForeign}
+                          onChange={(e) => setForm((f) => ({ ...f, shippingChargeForeign: e.target.value }))}
+                          className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-cream text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                          placeholder="e.g. 1200"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Tags */}
                 <div>
                   <label className="block text-xs font-medium text-cream/60 uppercase tracking-wider mb-1.5">Tags</label>
                   <input
@@ -555,11 +777,7 @@ const AdminProducts = () => {
                         form.featured ? "bg-primary" : "bg-white/10"
                       }`}
                     >
-                      <div
-                        className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${
-                          form.featured ? "translate-x-4" : "translate-x-0"
-                        }`}
-                      />
+                      <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${form.featured ? "translate-x-4" : "translate-x-0"}`} />
                     </div>
                     <span className="text-sm text-cream/70">Featured</span>
                   </label>
@@ -570,67 +788,10 @@ const AdminProducts = () => {
                         form.inStock ? "bg-emerald-500" : "bg-white/10"
                       }`}
                     >
-                      <div
-                        className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${
-                          form.inStock ? "translate-x-4" : "translate-x-0"
-                        }`}
-                      />
+                      <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${form.inStock ? "translate-x-4" : "translate-x-0"}`} />
                     </div>
                     <span className="text-sm text-cream/70">In Stock</span>
                   </label>
-                </div>
-
-                {/* Custom Shipping toggle + fields */}
-                <div className="space-y-3">
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <div
-                      onClick={() => setForm((f) => ({ ...f, hasCustomShipping: !f.hasCustomShipping }))}
-                      className={`w-10 h-6 rounded-full transition-colors flex items-center px-0.5 ${
-                        form.hasCustomShipping ? "bg-blue-500" : "bg-white/10"
-                      }`}
-                    >
-                      <div
-                        className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${
-                          form.hasCustomShipping ? "translate-x-4" : "translate-x-0"
-                        }`}
-                      />
-                    </div>
-                    <span className="text-sm text-cream/70 flex items-center gap-1.5">
-                      <Truck className="w-3.5 h-3.5" /> Custom Shipping
-                    </span>
-                    {!form.hasCustomShipping && (
-                      <span className="text-[10px] text-cream/30">Uses default rates</span>
-                    )}
-                  </label>
-
-                  {form.hasCustomShipping && (
-                    <div className="grid grid-cols-2 gap-4 pl-1">
-                      <div>
-                        <label className="block text-xs font-medium text-cream/60 uppercase tracking-wider mb-1.5">India Shipping (₹)</label>
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={form.shippingChargeIndia}
-                          onChange={(e) => setForm((f) => ({ ...f, shippingChargeIndia: e.target.value }))}
-                          className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-cream text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-cream/20"
-                          placeholder="e.g. 99"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-cream/60 uppercase tracking-wider mb-1.5">Foreign Shipping (₹)</label>
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={form.shippingChargeForeign}
-                          onChange={(e) => setForm((f) => ({ ...f, shippingChargeForeign: e.target.value }))}
-                          className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-cream text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-cream/20"
-                          placeholder="e.g. 1499"
-                        />
-                      </div>
-                    </div>
-                  )}
                 </div>
 
                 {/* Images */}

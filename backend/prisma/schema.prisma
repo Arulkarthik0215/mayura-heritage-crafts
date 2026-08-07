@@ -58,7 +58,8 @@ model Product {
   hasCustomShipping     Boolean @default(false)
   shippingChargeIndia   Float?
   shippingChargeForeign Float?
-  createdAt     DateTime @default(now())
+  displayOrder          Int      @default(0)
+  createdAt             DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
 

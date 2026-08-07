@@ -80,6 +80,15 @@ export async function deleteProduct(id: string) {
   return handleResponse<{ message: string }>(res);
 }
 
+export async function reorderProducts(items: { id: string; displayOrder: number }[]) {
+  const res = await fetch(`${API_BASE}/products/reorder`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ items }),
+  });
+  return handleResponse<{ message: string }>(res);
+}
+
 /* ─── Categories ─── */
 export async function fetchCategories() {
   const res = await fetch(`${API_BASE}/categories`);
