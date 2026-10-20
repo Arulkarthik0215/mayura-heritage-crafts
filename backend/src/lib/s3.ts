@@ -2,15 +2,22 @@ import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client
 import { randomUUID } from 'crypto';
 import path from 'path';
 
+const REGION = process.env.AWS_REGION || 'ap-south-1';
+
 const s3Client = new S3Client({
-  region: process.env.AWS_REGION || 'ap-south-1',
+  region: REGION,
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
   },
 });
 
-const BUCKET = process.env.AWS_S3_BUCKET || 'mayura-heritage-crafts';
+const BUCKET = process.env.AWS_S3_BUCKET || 'mayura-heritage-crafts-media';
+
+// Base URL stored in the DB for uploaded files. Point this at a CDN/custom domain to serve images from there.
+const PUBLIC_URL = (
+  process.env.S3_PUBLIC_URL || `https://${BUCKET}.s3.${REGION}.amazonaws.com`
+).replace(/\/+$/, '');
 
 /**
  * Uploads a file buffer to S3 and returns the public URL.
@@ -33,7 +40,7 @@ export async function uploadToS3(
   );
 
   // Return the public URL (assumes bucket has public read or CloudFront)
-  return `https://${BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+  return `${PUBLIC_URL}/${key}`;
 }
 
 /**
@@ -41,8 +48,9 @@ export async function uploadToS3(
  */
 export async function deleteFromS3(fileUrl: string): Promise<void> {
   try {
-    const url = new URL(fileUrl);
-    const key = url.pathname.slice(1); // remove leading /
+    const key = fileUrl.startsWith(`${PUBLIC_URL}/`)
+      ? fileUrl.slice(PUBLIC_URL.length + 1)
+      : new URL(fileUrl).pathname.slice(1); // remove leading /
 
     await s3Client.send(
       new DeleteObjectCommand({
